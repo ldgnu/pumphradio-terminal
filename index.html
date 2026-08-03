@@ -143,19 +143,22 @@
       <div id="cmd-log" class="cmd-log"></div>
     </main>
 
-    <!-- Footer / status + command line -->
-    <footer class="statusbar">
-      <span id="status-play" class="status-item">STANDBY</span>
-      <span id="status-buffer" class="status-item dim">BUFFER --%</span>
-      <span id="status-vol" class="status-item dim">VOL 80%</span>
-      <span class="status-item dim status-hint">/ cmd · ? help · 1-4 station · SPACE play · V viz · A ambient · F fav · H history</span>
-    </footer>
+    <!-- Fixed bottom bar: status + current track + command line -->
+    <div class="foot">
+      <footer class="statusbar">
+        <span id="status-play" class="status-item">STANDBY</span>
+        <span id="status-track" class="status-track dim" title="Tema actual">—</span>
+        <span id="status-buffer" class="status-item dim">BUFFER --%</span>
+        <span id="status-vol" class="status-item dim">VOL 80%</span>
+        <span class="status-item dim status-hint">/ cmd · ? help · 1-4 station · SPACE play · V viz · A ambient · F fav · H history</span>
+      </footer>
 
-    <!-- Command line -->
-    <div id="cmd-line" class="cmd-line">
-      <span class="prompt">pumphradio &gt;</span>
-      <input id="cmd-input" class="cmd-input" autocomplete="off" spellcheck="false" aria-label="comando">
-      <span class="cursor">▌</span>
+      <!-- Command line -->
+      <div id="cmd-line" class="cmd-line">
+        <span class="prompt">pumphradio &gt;</span>
+        <input id="cmd-input" class="cmd-input" autocomplete="off" spellcheck="false" aria-label="comando">
+        <span class="cursor">▌</span>
+      </div>
     </div>
 
     <!-- News pane (tmux-style split) -->

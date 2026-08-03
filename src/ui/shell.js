@@ -104,6 +104,9 @@ export function renderNow() {
   const newTrack = (st.now.display || st.now.track) ? ((st.now.display || st.now.track).slice(0, 40)) : '—'
   setText('#pb-track', newTrack)
   setText('#pb-station', station?.name || '—')
+  // barra inferior fija: nombre del tema actual
+  const bottomTrack = (st.now.display || st.now.track) ? `${st.now.artist || ''} — ${st.now.display || st.now.track}` : '— NO SIGNAL —'
+  setText('#status-track', bottomTrack)
 
   // FX: flash de scanline cuando cambia el track
   if (lastPbTrack !== undefined && lastPbTrack !== newTrack) {
