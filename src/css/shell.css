@@ -23,6 +23,7 @@ html, body {
   display: none;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* iOS: evita desborde por la barra del browser */
   padding: 0 16px;
   position: relative;
 }
@@ -332,4 +333,19 @@ html, body {
   .np-grid { grid-template-columns: 1fr; gap: 8px; }
   .st-name { width: auto; }
   .top-right #clock { display: none; }
+
+  /* footer: sin atajos de teclado en táctil */
+  .status-hint { display: none; }
+  #status-buffer { display: none; }
+
+  /* player bar: touch targets cómodos */
+  .player-bar { gap: 6px; padding: 10px 8px; }
+  .pb-btn { height: 38px; min-width: 40px; font-size: 15px; }
+  .pb-play { width: 48px; height: 48px; }
+  .pb-vol-wrap { gap: 6px; }
+  .pb-track { font-size: 12px; }
+
+  /* statusbar compacta y fija */
+  .statusbar { gap: 14px; padding: 0 2px; }
+  .cmd-line { padding: 0 2px; }
 }
