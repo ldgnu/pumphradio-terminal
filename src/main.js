@@ -10,6 +10,7 @@ import { audio } from './engine/audio.js'
 import { initShell } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
 import { initCommand, openCommand } from './ui/command.js'
+import { initNews } from './news/engine.js'
 
 let commandOpen = false
 
@@ -17,6 +18,7 @@ function init() {
   audio.initVolume()
   initShell()
   initCommand()
+  initNews()
 
   // Cargar estación inicial (la primera habilitada)
   const first = STATIONS.find(s => s.enabled)

@@ -121,6 +121,30 @@ html, body {
 .st-live { color: var(--signal); font-size: 10px; animation: pulse 1.6s infinite; }
 @keyframes pulse { 0%,100% {opacity:1} 50% {opacity:0.3} }
 
+/* --- News (signal intelligence) --- */
+.news { margin-top: 18px; }
+.news .section-title { color: var(--accent); }
+.news-list { display: flex; flex-direction: column; }
+.news-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 8px;
+  border-left: 2px solid var(--border);
+  text-decoration: none;
+  color: var(--fg);
+  font-size: 12px;
+  opacity: 0;
+  animation: news-in 0.4s ease forwards;
+}
+.news-item:hover { background: var(--bg-raise); border-left-color: var(--accent); }
+.ni-time { color: var(--dim); font-size: 11px; width: 38px; flex-shrink: 0; font-family: var(--font); }
+.ni-title { flex: 1; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.news-item:hover .ni-title { color: var(--accent); }
+.ni-src { color: var(--dim); font-size: 10px; flex-shrink: 0; }
+.news-empty { padding: 8px; font-size: 12px; }
+@keyframes news-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+
 /* --- cmd log (feedback de comandos) --- */
 .cmd-log {
   min-height: 18px;

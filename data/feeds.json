@@ -1,0 +1,53 @@
+{
+  "_note": "Feeds de noticias para PumphRadio. Fuente: suscripciones del FreshRSS de Javi. Agregar/quitar feed = editar aqui. genres: a que estaciones aplica. priority: peso en la mezcla. enabled: true requiere feed vivo.",
+  "feeds": [
+    {
+      "name": "Hard News",
+      "url": "https://hardnews.nl/feed/",
+      "genres": ["hardcore", "hardstyle"],
+      "priority": 3,
+      "enabled": true,
+      "source": "FreshRSS · hardnews.nl"
+    },
+    {
+      "name": "Hardstyle-Releases",
+      "url": "https://www.hardstyle-releases.com/feed/",
+      "genres": ["hardstyle"],
+      "priority": 2,
+      "enabled": true,
+      "source": "FreshRSS · hardstyle-releases.com"
+    },
+    {
+      "name": "1gabba",
+      "url": "https://1gabba.pw/taxonomy/term/1/all/feed",
+      "genres": ["hardcore"],
+      "priority": 2,
+      "enabled": true,
+      "source": "FreshRSS · 1gabba.pw"
+    },
+    {
+      "name": "Gabber.od.ua",
+      "url": "https://gabber.od.ua/rss.xml?action=article",
+      "genres": ["hardcore"],
+      "priority": 2,
+      "enabled": true,
+      "source": "FreshRSS · gabber.od.ua"
+    },
+    {
+      "name": "Mixmag",
+      "url": "https://mixmag.net/rss.xml",
+      "genres": ["nujazz", "deep-techno", "electronic"],
+      "priority": 2,
+      "enabled": true,
+      "source": "FreshRSS · mixmag.net"
+    },
+    {
+      "name": "EARMILK",
+      "url": "https://earmilk.com/feed/",
+      "genres": ["nujazz", "electronic"],
+      "priority": 1,
+      "enabled": true,
+      "source": "FreshRSS · earmilk.com"
+    }
+  ]
+}

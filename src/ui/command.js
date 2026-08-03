@@ -9,6 +9,7 @@
  */
 import { STATIONS, getState, setStation, setVisualizer, setView } from '../store.js'
 import { audio } from '../engine/audio.js'
+import { renderForStation } from '../news/engine.js'
 
 let input = null
 let open = false
@@ -72,6 +73,23 @@ function run(cmd) {
     case 'stations':
       log('> ' + STATIONS.filter(s => s.enabled).map(s => `0${s.num} ${s.name}`).join(' | '))
       break
+    case 'news':
+      renderForStation(getState().station)
+      log('> signal intelligence · ' + (getState().station?.name || 'all'))
+      break
+    case 'whoami':
+      log('> root@pumphradio:~$ underground listener · node ' + (getState().station?.node || '---'))
+      break
+    case 'time':
+      log('> ' + new Date().toISOString().slice(11, 19) + ' UTC')
+      break
+    case 'ls':
+    case 'status':
+      log('> ' + (getState().station?.name || 'no station') + ' · ' + (getState().playing ? 'PLAYING' : 'PAUSED') + ' · vol ' + getState().volume + '%')
+      break
+    case 'signal':
+      log('> SIGNAL ' + (88 + Math.floor(Math.random() * 12)) + '% · NODE ' + (getState().station?.node || '---'))
+      break
     case 'volume': {
       const v = parseInt(a, 10)
       if (!isNaN(v)) { audio.setVolume(v); log('> volume ' + v + '%') } else log('> usage: volume <0-100>')
@@ -82,7 +100,7 @@ function run(cmd) {
     case 'view':
       setView(a || 'nowplaying'); log('> view ' + (a || 'nowplaying')); break
     case 'help':
-      log('> play | pause | next | station <id> | stations | volume <0-100> | visualizer | help | quit')
+      log('> play | pause | next | station <id> | news | status | whoami | time | signal | volume <0-100> | visualizer | help')
       break
     case 'quit':
       close(); break
