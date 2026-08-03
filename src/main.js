@@ -24,6 +24,7 @@ function init() {
   initNews()
   initPaneControls()
   initPlayerBar()
+  initThemeSwitcher()
   initVisualizer()
 
   // Cargar estación inicial (la primera habilitada)
@@ -137,6 +138,31 @@ function logMode() {
   if (viz) {
     const l = document.getElementById('cmd-log')
     if (l) { l.textContent = '> visualizer: ' + viz.mode.toUpperCase() }
+  }
+}
+
+function initThemeSwitcher() {
+  const root = document.documentElement
+  const sw = document.getElementById('theme-sw')
+  if (!sw) return
+
+  const saved = localStorage.getItem('pumphradio-theme')
+  if (saved) root.dataset.theme = saved
+  applySwatchState()
+
+  sw.addEventListener('click', (e) => {
+    const b = e.target.closest('.swatch')
+    if (!b) return
+    root.dataset.theme = b.dataset.themeSet
+    localStorage.setItem('pumphradio-theme', b.dataset.themeSet)
+    applySwatchState()
+  })
+
+  function applySwatchState() {
+    const cur = root.dataset.theme
+    sw.querySelectorAll('.swatch').forEach((b) => {
+      b.classList.toggle('active', b.dataset.themeSet === cur)
+    })
   }
 }
 

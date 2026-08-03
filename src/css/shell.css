@@ -41,7 +41,24 @@ html, body {
 .brand { display: flex; align-items: baseline; gap: 10px; }
 .brand-name { font-weight: 700; letter-spacing: 0.05em; }
 .brand-sub { font-size: 11px; }
-.top-right { display: flex; gap: 16px; font-size: 12px; }
+.top-right { display: flex; gap: 16px; font-size: 12px; align-items: center; }
+
+/* --- Theme switcher (swatches) --- */
+.theme-sw { display: flex; gap: 5px; align-items: center; }
+.swatch {
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--c, var(--accent));
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.swatch:hover { transform: scale(1.2); }
+.swatch.active {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--c, var(--accent));
+  border-color: transparent;
+}
 
 /* --- Main --- */
 .main {

@@ -1,18 +1,21 @@
 /* ============================================================
    PUMPHRADIO — DESIGN TOKENS
    Terminal underground. Color con significado, pocos tonos.
+   Un tema por bloque [data-theme]. :root = default (One Dark).
+   Cambiar data-theme en <html> re-skinnea TODO el sitio
+   (fondo, texto, bordes, acento, warnings, signal, visualizer).
    ============================================================ */
 :root {
-  /* base */
-  --bg:        #0a0a0c;
-  --bg-raise:  #101014;
-  --fg:        #c8c8c8;
-  --dim:       #5a5a60;
-  --accent:    #ff5f56;   /* estación hardcore (seed). Por estación via JS. */
-  --warning:   #ffb454;
-  --error:     #ff5f56;
-  --signal:    #5fd7af;
-  --border:    #232329;
+  /* base — One Dark (Atom), default */
+  --bg:        #282c34;
+  --bg-raise:  #2f343d;
+  --fg:        #abb2bf;
+  --dim:       #5c6370;
+  --accent:    #61afef;
+  --warning:   #e5c07b;
+  --error:     #e06c75;
+  --signal:    #98c379;
+  --border:    #3e4451;
 
   /* tipografía */
   --font: 'JetBrains Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
@@ -24,4 +27,56 @@
 
   /* cursor */
   --cursor-visible: '▌';
+}
+
+/* --- Dracula --- */
+[data-theme="dracula"] {
+  --bg:        #282a36;
+  --bg-raise:  #313341;
+  --fg:        #f8f8f2;
+  --dim:       #6272a4;
+  --accent:    #bd93f9;
+  --warning:   #f1fa8c;
+  --error:     #ff5555;
+  --signal:    #50fa7b;
+  --border:    #44475a;
+}
+
+/* --- Nord --- */
+[data-theme="nord"] {
+  --bg:        #2e3440;
+  --bg-raise:  #3b4252;
+  --fg:        #d8dee9;
+  --dim:       #4c566a;
+  --accent:    #88c0d0;
+  --warning:   #ebcb8b;
+  --error:     #bf616a;
+  --signal:    #a3be8c;
+  --border:    #434c5e;
+}
+
+/* --- Gruvbox (dark) --- */
+[data-theme="gruvbox"] {
+  --bg:        #282828;
+  --bg-raise:  #3c3836;
+  --fg:        #ebdbb2;
+  --dim:       #928374;
+  --accent:    #fabd2f;
+  --warning:   #fe8019;
+  --error:     #fb4934;
+  --signal:    #b8bb26;
+  --border:    #504945;
+}
+
+/* --- Tokyo Night --- */
+[data-theme="tokyo-night"] {
+  --bg:        #1a1b26;
+  --bg-raise:  #24283b;
+  --fg:        #a9b1d6;
+  --dim:       #565f89;
+  --accent:    #7aa2f7;
+  --warning:   #e0af68;
+  --error:     #f7768e;
+  --signal:    #9ece6a;
+  --border:    #414868;
 }
