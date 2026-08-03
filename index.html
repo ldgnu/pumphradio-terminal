@@ -6,6 +6,14 @@
   <meta name="theme-color" content="#0a0a0c">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="PumphRadio">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
 
   <title>PumphRadio — underground frequencies</title>
   <meta name="description" content="PumphRadio — experimental underground radio. Hardcore, hardstyle, nujazz, deep techno. Broadcasting from nowhere.">
@@ -202,5 +210,13 @@
 
   </div>
 
+  <!-- Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
