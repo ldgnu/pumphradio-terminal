@@ -1,10 +1,11 @@
 {
-  "_note": "Config data-driven de estaciones. Agregar una estacion = agregar un objeto aqui, sin tocar codigo. enabled:true requiere streamUrl real. Ordenadas de la mas tranqui (deep techno) a la mas pesada (hardcore).",
+  "_note": "Config data-driven de estaciones. nickname = homenaje/sobrenombre real (no inventado). Agregar una estacion = agregar un objeto aqui, sin tocar codigo. enabled:true requiere streamUrl real. Ordenadas de la mas tranqui (deep techno) a la mas pesada (hardcore).",
   "stations": [
     {
       "id": "deep-techno",
       "num": 1,
       "name": "DEEP TECHNO",
+      "nickname": "detroit → berlin underground",
       "freq": "92.4",
       "tagline": "hypnotic · dub · atmospheric · minimal",
       "genres": ["Deep Techno", "Hypnotic Techno", "Dub Techno", "Atmospheric Techno", "Minimal Techno"],
@@ -22,6 +23,7 @@
       "id": "nujazz",
       "num": 2,
       "name": "NUJAZZ",
+      "nickname": "the wag club ’87 — chris bangs",
       "freq": "90.8",
       "tagline": "acid jazz · broken beat · future jazz · jazztronica",
       "genres": ["Nu Jazz", "Acid Jazz", "Broken Beat", "Future Jazz", "Jazztronica", "Downtempo"],
@@ -39,6 +41,7 @@
       "id": "hardstyle",
       "num": 3,
       "name": "HARDSTYLE",
+      "nickname": "q-dance 2000 · lowlands born",
       "freq": "89.4",
       "tagline": "early · raw · euphoric · reverse bass",
       "genres": ["Hardstyle", "Early Hardstyle", "Rawstyle", "Raw Hardstyle", "Euphoric Hardstyle", "Reverse Bass"],
@@ -56,6 +59,7 @@
       "id": "hardcore",
       "num": 4,
       "name": "HARDCORE",
+      "nickname": "masters of hardcore — netherlands",
       "freq": "88.1",
       "tagline": "gabber · industrial · frenchcore · uptempo",
       "genres": ["Hardcore", "Gabber", "Industrial Hardcore", "Frenchcore", "Millennium Hardcore", "Early Hardcore", "Uptempo"],
