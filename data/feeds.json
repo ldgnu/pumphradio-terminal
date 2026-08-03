@@ -36,6 +36,15 @@
       "enabled": true,
       "lang": "en",
       "source": "Mixmag"
+    },
+    {
+      "name": "Dancing Astronaut",
+      "url": "https://dancingastronaut.com/feed/",
+      "genres": ["deep-techno", "electronic", "nujazz"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "Dancing Astronaut"
     }
   ]
 }

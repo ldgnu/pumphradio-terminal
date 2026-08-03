@@ -123,6 +123,60 @@ const T = {
     title: 'Grandes y pequeños sellos fijan principios para la música hecha con IA en los rankings',
     summary: 'Discográficas mayores e independientes se pusieron de acuerdo en una serie de principios para regular cómo la música generada con IA puede entrar en los rankings y listas de ventas.',
   },
+
+  // DANCING ASTRONAUT (inglés)
+  'Sammy Virji Brings His Iconic UKG': {
+    title: 'Sammy Virji lleva su inconfundible sonido UKG a Nueva York por dos noches en Brooklyn',
+    summary: 'El productor británico Sammy Virji, referente del UK garage actual, confirma dos fechas en Brooklyn para presentar su sonido característico. Una cita para los que siguen la nueva ola del UKG que está cruzando el Atlántico.',
+  },
+  'Bipolar Sunshine Rise': {
+    title: 'Bipolar Sunshine: el ascenso de Manchester a los escenarios del mundo',
+    summary: 'Un repaso a la carrera de Bipolar Sunshine, de sus raíces en Manchester a consolidarse como una de las voces más versátiles de la escena. La historia de un artista que no para de cruzar géneros.',
+  },
+  'Daijo taps heritage and hypnosis': {
+    title: 'Daijo fusiona herencia e hipnosis en “Sacred Dance”',
+    summary: 'El productor Daijo entrega “Sacred Dance”, una pieza donde la herencia cultural se encuentra con un groove hipnótico. Un lanzamiento que apuesta por el detalle y la atmósfera antes que por el golpe fácil.',
+  },
+  'me n ü on Their Breakout Year': {
+    title: 'me n ü repasa su año de despegue, “Hope House” y encontrar su lugar',
+    summary: 'El dúo me n ü habla sobre su año decisivo, el proyecto “Hope House” y el proceso de encontrar su propia identidad dentro de la escena. Una conversación sobre crecimiento y dirección artística.',
+  },
+  'Elements Music Arts Festival': {
+    title: 'Elements Music & Arts Festival sigue empujando los límites de su propuesta',
+    summary: 'El festival Elements continúa ampliando su propuesta, combinando música y arte en un formato que va más allá del lineup tradicional. Un evento que apuesta por la experiencia inmersiva por encima del festival masivo.',
+  },
+  'Showtek go label mode': {
+    title: 'Showtek se lanza con el sello F_CK THE SYSTEM y suma a Kate Ryan en su primer single',
+    summary: 'Showtek presenta su nuevo sello, F_CK THE SYSTEM, y confirma a Kate Ryan como voz de su primer lanzamiento. Un movimiento que marca una nueva etapa para el dúo, con mirada propia de catálogo.',
+  },
+  'Fejká links back up with Kim Van Loo': {
+    title: 'Fejká vuelve a sumar a Kim Van Loo en su debut para Colorize, “We Were There”',
+    summary: 'Fejká estrena “We Were There” en Colorize, retomando su colaboración con Kim Van Loo. Un track melódico y de atmósfera cuidada, en la línea del progressive house más elegante del sello.',
+  },
+  'The Manager Behind Audien': {
+    title: 'El manager detrás de Audien, Valentino Khan y la nueva ola de Prodigy',
+    summary: 'Una entrevista con el manager que representa a nombres como Audien y Valentino Khan, y que ahora apunta a la nueva generación de artistas. Una mirada al costado de gestión y estrategia del negocio.',
+  },
+  'Nitefreak Afroholic Records': {
+    title: 'El sello Afroholic de Nitefreak construye la próxima ola del afro house',
+    summary: 'El sello de Nitefreak, Afroholic Records, se posiciona como plataforma para la nueva generación del afro house. Una apuesta por el sonido y los talentos que definen el presente del género.',
+  },
+  'Deadbeats': {
+    title: 'Review: el fin de semana del 4 de julio en Deadbeats',
+    summary: 'La reseña del evento que Deadbeats armó para el fin de semana del 4 de julio, repasando los sets y el clima de una fecha que reúne a lo mejor del bass y el dubstep.',
+  },
+  'Bipolar Sunshine': {
+    title: 'Bipolar Sunshine: el ascenso de Manchester a los escenarios del mundo',
+    summary: 'Un repaso a la carrera de Bipolar Sunshine, de sus raíces en Manchester a consolidarse como una de las voces más versátiles de la escena. La historia de un artista que no para de cruzar géneros.',
+  },
+  'Elements Music': {
+    title: 'Elements Music & Arts Festival sigue empujando los límites de su propuesta',
+    summary: 'El festival Elements continúa ampliando su propuesta, combinando música y arte en un formato que va más allá del lineup tradicional. Un evento que apuesta por la experiencia inmersiva por encima del festival masivo.',
+  },
+  'Afroholic': {
+    title: 'El sello Afroholic de Nitefreak construye la próxima ola del afro house',
+    summary: 'El sello de Nitefreak, Afroholic Records, se posiciona como plataforma para la nueva generación del afro house. Una apuesta por el sonido y los talentos que definen el presente del género.',
+  },
 }
 
 let hit = 0
