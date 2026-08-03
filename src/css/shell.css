@@ -99,6 +99,33 @@ html, body {
 }
 .np-val { color: var(--fg); word-break: break-word; }
 
+/* Cover (Cover Art Archive) */
+.np-cover { margin-bottom: 12px; }
+.np-cover img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+/* Bio del artista (Wikipedia) */
+.np-bio {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+.np-bio-head {
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.np-bio-text b { color: var(--fg); font-weight: 700; }
+
 /* --- Player bar (controles visibles) --- */
 .player-bar {
   display: flex;
@@ -124,6 +151,11 @@ html, body {
   justify-content: center;
   transition: border-color var(--transition-fast), color var(--transition-fast);
   padding: 0 8px;
+  -webkit-appearance: none;     /* Safari iOS: saca el chrome nativo gris */
+  appearance: none;
+  border-radius: 0;             /* anula el radio nativo de iOS */
+  touch-action: manipulation;   /* evita zoom/delay en tap */
+  -webkit-tap-highlight-color: transparent;
 }
 .pb-btn:hover { border-color: var(--accent); color: var(--accent); }
 .pb-play {
@@ -172,6 +204,11 @@ html, body {
   padding: 2px 8px;
   cursor: pointer;
   letter-spacing: 0.1em;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .viz-mode-btn:hover { border-color: var(--accent); color: var(--accent); }
 

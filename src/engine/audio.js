@@ -15,6 +15,7 @@
  */
 import { setPlaying, setLoading, setNow, getState, setVolume as storeSetVolume } from '../store.js'
 import { parseStreamTitle } from './metadata.js'
+import { enrich } from './enrich.js'
 import { AnalyserBridge } from '../visualizer/analyser.js'
 
 class AudioEngine {
@@ -111,6 +112,13 @@ class AudioEngine {
     this.lastTitle = streamTitle
     const meta = parseStreamTitle(streamTitle, this.station?.name)
     setNow(meta)
+    // Enriquecer en background (no bloquea UI)
+    if (meta.artist && meta.track) {
+      enrich(meta.artist, meta.track).then((data) => {
+        if (this.lastTitle !== streamTitle) return // otro track ganó la carrera
+        setNow({ ...meta, ...data })
+      }).catch(() => { /* ignore */ })
+    }
   }
 
   scheduleReconnect() {

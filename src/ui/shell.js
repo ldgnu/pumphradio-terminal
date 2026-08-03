@@ -52,10 +52,46 @@ export function renderNow() {
   setText('#np-node', station?.node || '—')
   setText('#np-genre', (station?.genres?.[0] || '—'))
   setText('#np-freq', station?.freq ? station.freq + ' FM' : '—')
-  // Campo de release/label: en PHASE 1 solo metadata de stream (se enriquece en PHASE 2)
   setText('#np-release', st.now.release || '—')
   setText('#np-label', st.now.label || '—')
   setText('#np-year', st.now.year || '—')
+
+  // Cover (Cover Art Archive). Solo mostrar cuando llega.
+  const cover = $('#np-cover')
+  const coverImg = $('#np-cover-img')
+  if (cover && coverImg) {
+    if (st.now.coverUrl) {
+      cover.hidden = false
+      if (coverImg.src !== st.now.coverUrl) coverImg.src = st.now.coverUrl
+    } else {
+      cover.hidden = true
+    }
+  }
+
+  // Bio del artista (Wikipedia). Highlight del nombre en negrita, no
+  // de la primera frase entera — porque la 1ra frase suele ser "X is a..."
+  // y destaca la palabra equivocada.
+  const bioWrap = $('#np-bio-wrap')
+  const bioText = $('#np-bio-text')
+  if (bioWrap && bioText) {
+    if (st.now.artistBio) {
+      const raw = st.now.artistBio
+      const desc = st.now.artistDesc || st.now.artist
+      const headText = `— ${desc ? desc.toUpperCase() : 'ARTIST'} —`
+      // Si la primera frase arranca con el nombre del artista, destácalo en negrita.
+      let html = escapeHtml(raw)
+      const name = st.now.artist?.trim()
+      if (name && html.toLowerCase().startsWith(name.toLowerCase())) {
+        html = `<b>${escapeHtml(name)}</b>` + html.slice(name.length)
+      }
+      bioText.innerHTML = html
+      const head = $('#np-bio-head')
+      if (head) head.textContent = headText
+      bioWrap.hidden = false
+    } else {
+      bioWrap.hidden = true
+    }
+  }
 
   const el = $('#elapsed')
   if (el) el.textContent = fmtElapsed(st.elapsed)
@@ -95,6 +131,14 @@ function renderStatusBar() {
 export function setText(id, text) {
   const el = $(id)
   if (el && el.textContent !== text) el.textContent = text
+}
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 export function fmtElapsed(sec) {
