@@ -126,6 +126,12 @@ En Cloudflare (zona `pumphradio.com.ar`), registros **DNS only (nube gris)**:
 > ⚠️ **Nube gris obligatoria** para que GitHub valide el dominio y emita el certificado TLS.
 > Con nube naranja (proxied), GitHub no puede verificar (error "DNS record could not be retrieved").
 
+> 🛡️ **¿Por qué la nube gris no es insegura acá?** El origen es GitHub Pages (público por diseño,
+> detrás del CDN Fastly de GitHub) — no hay IP de servidor propio que proteger. HTTPS lo emite
+> GitHub igual (cert auto). El proxy de Cloudflare solo tiene sentido para ocultar *tu propia*
+> infraestructura; con GitHub Pages es innecesario y además rompe la validación del dominio.
+
+
 Luego en **GitHub → Settings → Pages** poné el custom domain (`www.pumphradio.com.ar`),
 esperá que valide y GitHub emite el cert automáticamente (puede tardar hasta 1h).
 
