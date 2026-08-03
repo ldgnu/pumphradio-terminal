@@ -13,6 +13,7 @@ const state = {
   playing: false,
   loading: false,
   volume: 80,
+  previousVolume: 80,
   now: { artist: '', track: '', streamTitle: '' },
   elapsed: 0,
   booted: false,
@@ -61,6 +62,10 @@ export function setLoading(v) {
 export function setVolume(v) {
   state.volume = v
   emit('volume', v)
+}
+
+export function setPreviousVolume(v) {
+  state.previousVolume = v
 }
 
 export function setView(v) {

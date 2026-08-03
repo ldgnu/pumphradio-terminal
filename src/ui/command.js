@@ -14,6 +14,7 @@ import { getHistory, getFavorites, toggleFavorite, getStats, fmtDuration, isFavo
 import { openHistory, openFavorites } from './views.js'
 import { toggleAmbient, isAmbient } from './ambient.js'
 import { openHelp } from './help.js'
+import { setTheme, currentTheme, THEMES } from '../themes.js'
 
 let input = null
 let open = false
@@ -102,14 +103,12 @@ function run(cmd) {
       log('> stats · session ' + fmtDuration(getStats().sessionSeconds) + ' · total ' + fmtDuration(getStats().totalSeconds) + ' · tracks ' + getStats().totalTracks + ' · favs ' + getStats().favorites)
       break
     case 'theme': {
-      const themes = ['one-dark', 'dracula', 'nord', 'gruvbox', 'tokyo-night', 'tty-linux', 'matrix']
-      const cur = document.documentElement.dataset.theme || 'one-dark'
-      if (a && themes.includes(a)) {
-        document.documentElement.dataset.theme = a
-        localStorage.setItem('pumphradio-theme', a)
+      const names = THEMES.map(t => t.id)
+      if (a && names.includes(a)) {
+        setTheme(a)
         log('> theme: ' + a)
       } else {
-        log('> theme (' + cur + ') · ' + themes.join(' | '))
+        log('> theme (' + currentTheme() + ') · ' + names.join(' | '))
       }
       break
     }

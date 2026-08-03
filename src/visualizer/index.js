@@ -81,22 +81,25 @@ export class Visualizer {
     const bpm = (st.station && st.station.bpmHint) || 140
     const t = this.t * (bpm / 60)
     const kick = (Math.sin(t * Math.PI * 2) * 0.5 + 0.5) ** 3
-    const out = new Float32Array(128)
+    const idle = st.playing ? 1 : 0.6 // pausa: calmado pero SIEMPRE visible
+    const out = new Uint8Array(128)
     for (let i = 0; i < 128; i++) {
       const f = i / 128
       const bass = (1 - f) * 0.8 + 0.2
       const v = (Math.abs(Math.sin(t * (1.5 + f * 8) + f * 9)) * 0.5 * bass +
-                 Math.random() * 0.2) * (0.3 + kick * 0.8) * (st.playing ? 1 : 0.15)
-      out[i] = Math.min(1, v)
+                 Math.random() * 0.2) * (0.3 + kick * 0.8) * idle
+      out[i] = Math.floor(Math.min(1, v) * 255) // 0-255, igual que AnalyserNode
     }
     return out
   }
   simWave() {
     const st = getState()
     const t = this.t
-    const out = new Float32Array(128)
+    const idle = st.playing ? 1 : 0.55
+    const out = new Uint8Array(128)
     for (let i = 0; i < 128; i++) {
-      out[i] = Math.sin(i * 0.2 + t * 10) * 0.4 * (st.playing ? 1 : 0.15) + Math.sin(i * 0.5 - t * 7) * 0.3
+      const v = Math.sin(i * 0.2 + t * 10) * 0.4 * idle + Math.sin(i * 0.5 - t * 7) * 0.3 * idle
+      out[i] = Math.floor(128 + v * 127) // centrado en 128, rango 0-255
     }
     return out
   }

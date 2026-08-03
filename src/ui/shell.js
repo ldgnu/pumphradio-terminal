@@ -17,6 +17,7 @@ export function initShell() {
   on('playing', () => { renderStatusBar(); renderNow(); renderPlayIcon() })
   on('loading', renderStatusBar)
   on('volume', renderStatusBar)
+  on('volume', renderVolumeIcon)
   on('elapsed', () => { const el = $('#elapsed'); if (el) el.textContent = fmtElapsed(getState().elapsed) })
   on('booted', () => { startClock(); renderStatusBar() })
 
@@ -145,6 +146,23 @@ function renderStatusBar() {
   if (vol) vol.textContent = 'VOL ' + st.volume + '%'
   const vlabel = $('#vol-label')
   if (vlabel) vlabel.textContent = st.volume + '%'
+}
+
+// Muestra el icono de volumen correcto (speaker vs speaker-muted) según estado.
+function renderVolumeIcon() {
+  const vol = getState().volume
+  const iconVolume = $('#pb-icon-volume')
+  const iconMuted = $('#pb-icon-muted')
+  const btn = $('#btn-mute')
+  if (vol === 0) {
+    if (iconVolume) iconVolume.style.display = 'none'
+    if (iconMuted) iconMuted.style.display = ''
+    if (btn) { btn.setAttribute('aria-label', 'Activar sonido'); btn.setAttribute('title', 'Activar sonido (M)') }
+  } else {
+    if (iconVolume) iconVolume.style.display = ''
+    if (iconMuted) iconMuted.style.display = 'none'
+    if (btn) { btn.setAttribute('aria-label', 'Silenciar'); btn.setAttribute('title', 'Silenciar (M)') }
+  }
 }
 
 export function setText(id, text) {

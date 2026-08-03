@@ -151,6 +151,11 @@ class AudioEngine {
 
   setVolume(v) {
     const vol = Math.max(0, Math.min(100, v))
+    const currentVol = getState().volume
+    // Si estamos muteando (vol=0) y habia volumen > 0, guardar como previo
+    if (vol === 0 && currentVol > 0) {
+      localStorage.setItem('pumphradio_previous_volume', String(currentVol))
+    }
     this.applyVolume(vol)
     storeSetVolume(vol)
     localStorage.setItem('pumphradio_volume', String(vol))
@@ -158,7 +163,14 @@ class AudioEngine {
 
   initVolume() {
     const saved = parseInt(localStorage.getItem('pumphradio_volume') || '80', 10)
-    this.setVolume(saved)
+    // Si el volumen guardado es 0 (quedo muteado en una sesion anterior),
+    // arrancar con el volumen previo (o default 80) para no iniciar mudo.
+    if (saved === 0) {
+      const prev = parseInt(localStorage.getItem('pumphradio_previous_volume') || '80', 10)
+      this.setVolume(prev)
+    } else {
+      this.setVolume(saved)
+    }
   }
 
   getAnalyser() {

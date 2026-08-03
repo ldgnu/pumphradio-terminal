@@ -62,22 +62,22 @@ html, body {
 }
 .top-help:hover { border-color: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent); }
 
-/* --- Theme switcher (swatches) --- */
-.theme-sw { display: flex; gap: 5px; align-items: center; }
-.swatch {
-  width: 13px; height: 13px;
-  border-radius: 50%;
+/* --- Botón de theme único (cicla colores) --- */
+.theme-btn {
+  background: none;
   border: 1px solid var(--border);
-  background: var(--c, var(--accent));
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
   cursor: pointer;
-  padding: 0;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  white-space: nowrap;
+  transition: border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  -webkit-appearance: none; appearance: none; border-radius: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
-.swatch:hover { transform: scale(1.2); }
-.swatch.active {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--c, var(--accent));
-  border-color: transparent;
-}
+.theme-btn:hover { border-color: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 35%, transparent); }
 
 /* --- Main --- */
 .main {

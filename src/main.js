@@ -5,7 +5,7 @@
 import './css/tokens.css'
 import './css/shell.css'
 import './css/fx.css'
-import { STATIONS, getState, setStation, on } from './store.js'
+import { STATIONS, getState, setStation, on, setPreviousVolume } from './store.js'
 import { audio } from './engine/audio.js'
 import { initShell } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
@@ -18,6 +18,7 @@ import { initOverlay, isOverlayOpen, closeOverlay } from './ui/overlay.js'
 import { openHelp } from './ui/help.js'
 import { openHistory, openFavorites, currentTrackLine } from './ui/views.js'
 import { initAmbient, initAmbientControls, toggleAmbient, closeAmbient, openAmbient, isAmbient } from './ui/ambient.js'
+import { initTheme, cycleTheme, setTheme, currentTheme } from './themes.js'
 
 let viz = null
 let commandOpen = false
@@ -62,8 +63,20 @@ function initPlayerBar() {
   $('btn-next').addEventListener('click', () => nextStation())
   $('btn-vol-down').addEventListener('click', () => audio.setVolume(gs().volume - 5))
   $('btn-vol-up').addEventListener('click', () => audio.setVolume(gs().volume + 5))
-  $('btn-mute').addEventListener('click', () => audio.setVolume(gs().volume > 0 ? 0 : 80))
+  $('btn-mute').addEventListener('click', () => toggleMute())
   $('btn-viz-mode').addEventListener('click', () => { if (viz) viz.nextMode() })
+}
+
+// Mute/unmute recordando el volumen previo (no salta a un valor fijo).
+function toggleMute() {
+  const currentVol = gs().volume
+  if (currentVol > 0) {
+    setPreviousVolume(currentVol)
+    audio.setVolume(0)
+  } else {
+    const restoreVol = gs().previousVolume > 0 ? gs().previousVolume : 80
+    audio.setVolume(restoreVol)
+  }
 }
 
 function initVisualizer() {
@@ -153,16 +166,9 @@ function bindKeyboard() {
         toggleAmbient()
         if (viz) setTimeout(() => viz.onResize(), 80)
         break
-      case 't': {
-        const themes = ['one-dark', 'dracula', 'nord', 'gruvbox', 'tokyo-night', 'tty-linux', 'matrix']
-        const cur = document.documentElement.dataset.theme || 'one-dark'
-        const next = themes[(themes.indexOf(cur) + 1) % themes.length]
-        document.documentElement.dataset.theme = next
-        localStorage.setItem('pumphradio-theme', next)
-        const l = document.getElementById('cmd-log')
-        if (l) l.textContent = '> theme: ' + next
+      case 't':
+        cycleTheme()
         break
-      }
       case 'arrowup':
         e.preventDefault()
         audio.setVolume(getState().volume + 5)
@@ -172,7 +178,7 @@ function bindKeyboard() {
         audio.setVolume(getState().volume - 5)
         break
       case 'm':
-        audio.setVolume(getState().volume > 0 ? 0 : 80)
+        toggleMute()
         break
     }
   })
@@ -228,28 +234,16 @@ function initIosUnlock() {
 }
 
 function initThemeSwitcher() {
-  const root = document.documentElement
-  const sw = document.getElementById('theme-sw')
-  if (!sw) return
-
-  const saved = localStorage.getItem('pumphradio-theme')
-  if (saved) root.dataset.theme = saved
-  applySwatchState()
-
-  sw.addEventListener('click', (e) => {
-    const b = e.target.closest('.swatch')
-    if (!b) return
-    root.dataset.theme = b.dataset.themeSet
-    localStorage.setItem('pumphradio-theme', b.dataset.themeSet)
-    applySwatchState()
+  // Aplica el theme guardado al arrancar (persistencia: se recuerda al reabrir)
+  initTheme()
+  const btn = document.getElementById('btn-theme')
+  if (!btn) return
+  // un solo botón: tocar cicla los themes y cambia los colores
+  btn.addEventListener('click', () => {
+    const id = cycleTheme()
+    const l = document.getElementById('cmd-log')
+    if (l) l.textContent = '> theme: ' + id
   })
-
-  function applySwatchState() {
-    const cur = root.dataset.theme
-    sw.querySelectorAll('.swatch').forEach((b) => {
-      b.classList.toggle('active', b.dataset.themeSet === cur)
-    })
-  }
 }
 
 // Arranque
