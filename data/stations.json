@@ -9,15 +9,15 @@
       "tagline": "gabber · industrial · frenchcore · uptempo",
       "genres": ["Hardcore", "Gabber", "Industrial Hardcore", "Frenchcore", "Millennium Hardcore", "Early Hardcore", "Uptempo"],
       "subgenres": ["hardcore", "gabber", "uptempo", "frenchcore"],
-      "streamUrl": "https://stream.zeno.fm/gpv2kgzwum0uv",
-      "metadataUrl": "https://api.zeno.fm/mounts/metadata/subscribe/e4vzegzwum0uv",
+      "streamUrl": "https://stream.zeno.fm/nv74sz7wum0uv",
+      "metadataUrl": "https://api.zeno.fm/mounts/metadata/subscribe/nv74sz7wum0uv",
       "metaType": "zeno-sse",
       "accent": "#ff5f56",
       "node": "HC-01",
       "bpmHint": 170,
       "scene": ["netherlands", "belgium", "rotterdam"],
       "enabled": true,
-      "_seed": "stream Zeno heredado (multi-genero); reemplazar por stream dedicado cuando exista"
+      "_seed": "stream Zeno dedicado hardcore; metadata SSE con mount id del stream"
     },
     {
       "id": "hardstyle",
