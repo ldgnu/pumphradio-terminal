@@ -73,7 +73,7 @@ export function renderNow() {
     }
   }
 
-  // Bio del artista (Wikipedia). Highlight del nombre en negrita, no
+  // Bio del artista (MusicBrainz + Wikidata). Highlight del nombre en negrita, no
   // de la primera frase entera — porque la 1ra frase suele ser "X is a..."
   // y destaca la palabra equivocada.
   const bioWrap = $('#np-bio-wrap')

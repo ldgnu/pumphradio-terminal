@@ -2,9 +2,9 @@
  * enrich.js — Enriquece la metadata cruda del stream con datos externos.
  *
  * Fuentes (todas con CORS abierto, sin API key):
- *   - MusicBrainz: RELEASE / LABEL / YEAR (search por artist + track)
+ *   - MusicBrainz: RELEASE / LABEL / YEAR + ARTIST BIO data (genres, country, type)
  *   - Cover Art Archive: COVER del álbum (por release-mbid)
- *   - Wikipedia (summary): BIO + imagen del artista
+ *   - Wikidata: ARTIST BIO description (via MusicBrainz URL-rels link)
  *
  * Reglas de oro:
  *   - NUNCA inventar datos. Si una API no devuelve, dejar "—".
@@ -51,7 +51,7 @@ function toCache(key, data) { memCache.set(key, { ts: Date.now(), data }) }
 function escLucene(s) { return s.replace(/["\\]/g, c => `\\${c}`) }
 
 /**
- * Enriquece artist+track. Devuelve { release, label, year, coverUrl, artistBio, artistImage }
+ * Enriquece artist+track. Devuelve { release, label, year, coverUrl, artistBio }
  * Cada campo puede ser undefined si la fuente no devolvió.
  */
 export async function enrich(artist, track) {
@@ -94,22 +94,107 @@ export async function enrich(artist, track) {
     } catch { /* ignore */ }
   }
 
-  // 3) Wikipedia: bio + imagen del artista. Prefiere ESPAÑOL, fallback inglés.
+  // 3) Bio del artista: MusicBrainz + Wikidata (datos factuales, nunca inventar)
+  // Fallback: si no hay match claro o datos insuficientes, dejar undefined
   if (artist) {
-    const wikiTitle = encodeURIComponent(artist.trim())
-    for (const lang of ['es', 'en']) {
-      try {
-        const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${wikiTitle}`)
-        if (!r.ok) continue
-        const d = await r.json()
-        if (d.extract) {
-          out.artistBio = d.extract
-          out.artistImage = d.thumbnail?.source
-          if (d.description) out.artistDesc = d.description
-          break
+    const artistName = artist.trim()
+    
+    // 3a) Buscar artista en MusicBrainz
+    const mbSearch = await mbFetch(`/artist?query=artist:"${escLucene(artistName)}"&fmt=json&limit=3`)
+    
+    if (mbSearch?.artists?.length) {
+      // Tomar el primer resultado (más relevante por score de MB)
+      const mbArtist = mbSearch.artists[0]
+      const mbid = mbArtist.id
+      
+      // 3b) Obtener detalles completos con relaciones y géneros
+      const mbDetails = await mbFetch(`/${mbid}?inc=url-rels+genres+tags&fmt=json`)
+      
+      if (mbDetails) {
+        // Datos factuales estructurados
+        const type = mbDetails.type // Person, Group, etc.
+        const country = mbDetails.country // Código ISO (AR, US, GB, etc.)
+        const genres = mbDetails.genres?.map(g => g.name).filter(Boolean) || []
+        const tags = mbDetails.tags?.map(t => t.name).filter(Boolean) || []
+        
+        // Buscar link a Wikidata en relaciones URL
+        let wikidataId = null
+        if (mbDetails.relations) {
+          const wikidataRel = mbDetails.relations.find(r => 
+            r.type === 'wikidata' && r.url?.resource
+          )
+          if (wikidataRel?.url?.resource) {
+            // Extraer Q ID de URL como "https://www.wikidata.org/wiki/Q12345"
+            const match = wikidataRel.url.resource.match(/Q\d+/)
+            if (match) wikidataId = match[0]
+          }
         }
-      } catch { /* try next lang */ }
+        
+        // 3c) Si hay Wikidata, obtener descripción factual corta
+        let wikidataDesc = null
+        if (wikidataId) {
+          try {
+            const wdUrl = `https://www.wikidata.org/wiki/Special:EntityData/${wikidataId}.json`
+            const r = await fetch(wdUrl, { 
+              headers: { 'User-Agent': UA, 'Accept': 'application/json' } 
+            })
+            if (r.ok) {
+              const wdData = await r.json()
+              const entity = wdData.entities?.[wikidataId]
+              if (entity) {
+                // Preferir español, fallback a inglés
+                wikidataDesc = entity.descriptions?.es?.value || 
+                              entity.descriptions?.en?.value || 
+                              null
+              }
+            }
+          } catch { /* ignore, fallback gracefully */ }
+        }
+        
+        // 3d) Construir bio factual solo con datos presentes (NUNCA inventar)
+        const bioParts = []
+        
+        if (wikidataDesc) {
+          // Descripción corta de Wikidata (factual, controlada)
+          bioParts.push(wikidataDesc)
+        } else if (type || country) {
+          // Fallback: construir descripción mínima con datos estructurados
+          const typeStr = type === 'Person' ? 'Artist' : 
+                         type === 'Group' ? 'Band' : 
+                         type || 'Artist'
+          const countryStr = country ? ` from ${country}` : ''
+          bioParts.push(`${typeStr}${countryStr}`)
+        }
+        
+        // Agregar géneros si están disponibles
+        const allGenres = [...new Set([...genres, ...tags])]
+        if (allGenres.length > 0) {
+          const genreStr = allGenres.slice(0, 3).join(', ')
+          bioParts.push(`Genres: ${genreStr}`)
+        }
+        
+        // Solo asignar bio si hay contenido factual
+        if (bioParts.length > 0) {
+          out.artistBio = bioParts.join(' · ')
+        }
+        
+        // artistDesc: descripción corta para el header (reemplaza Wikipedia "description")
+        // El desc de Wikidata es una one-liner factual tipo "Dutch hardstyle DJ"
+        if (wikidataDesc) {
+          out.artistDesc = wikidataDesc
+        } else if (type && country) {
+          out.artistDesc = `${type} from ${country}`
+        } else if (type) {
+          out.artistDesc = type
+        }
+        
+        // Imagen del artista: Wikidata no da imágenes fácilmente, dejar undefined
+        // (la UI puede manejar ausencia de imagen gracefully)
+      }
     }
+    
+    // Si no hay match en MusicBrainz o no hay datos suficientes, 
+    // dejar artistBio como undefined (NUNCA inventar ni caer a Wikipedia)
   }
 
   toCache(key, out)

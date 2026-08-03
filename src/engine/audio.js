@@ -36,7 +36,7 @@ class AudioEngine {
   }
 
   bindEvents() {
-    this.audio.onplay = () => { setPlaying(true); this.bridge.ensureRunning() }
+    this.audio.onplay = () => { setPlaying(true); this.bridge?.ensureRunning() }
     this.audio.onpause = () => setPlaying(false)
     this.audio.onwaiting = () => setLoading(true)
     this.audio.onplaying = () => setLoading(false)
@@ -85,7 +85,7 @@ class AudioEngine {
     this.applyVolume(getState().volume)
     setLoading(true)
     this.audio.load()
-    this.bridge.ensureRunning()
+    this.bridge?.ensureRunning()
     this.audio.play().catch(() => setLoading(false))
 
     this.connectMetadata(station)
@@ -144,9 +144,15 @@ class AudioEngine {
   applyVolume(v) {
     const vol = Math.max(0, Math.min(100, v))
     if (this.bridge && this.bridge.gain) {
-      this.bridge.gain.gain.value = vol / 100
+      // iOS ignora audio.volume — usamos SOLO el GainNode para controlar volumen.
+      // No tocar this.audio.volume para evitar doble-atenuación en desktop.
+      // setValueAtTime evita glitches/ramps en iOS.
+      const now = this.bridge.ctx.currentTime
+      this.bridge.gain.gain.setValueAtTime(vol / 100, now)
+    } else {
+      // Fallback: sin bridge (CORS fallback), usar audio.volume nativo
+      this.audio.volume = vol / 100
     }
-    this.audio.volume = vol / 100
   }
 
   setVolume(v) {
@@ -156,6 +162,9 @@ class AudioEngine {
     if (vol === 0 && currentVol > 0) {
       localStorage.setItem('pumphradio_previous_volume', String(currentVol))
     }
+    // En iOS, tocar botones de volumen es un gesto válido para desbloquear
+    // el AudioContext. Resume por si estaba suspended/interrupted.
+    this.bridge?.ensureRunning()
     this.applyVolume(vol)
     storeSetVolume(vol)
     localStorage.setItem('pumphradio_volume', String(vol))

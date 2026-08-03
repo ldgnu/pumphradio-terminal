@@ -220,17 +220,17 @@ function logMode() {
 }
 
 // iOS Safari: el AudioContext arranca suspended y el primer play() del boot
-// (sin gesto) es bloqueado. Un "unlock" resume el contexto en el primer
-// toque/click — requisito para que el visualizador reciba audio real en iPhone.
+// (sin gesto) es bloqueado. Un "unlock" resume el contexto en CUALQUIER
+// toque/click — permanente (no se desregistra) porque iOS puede re-suspender
+// el contexto tras una interrupción (Siri, llamada, screen lock).
 function initIosUnlock() {
   function unlock() {
     const br = audio.bridge
-    if (br && br.ctx && br.ctx.state === 'suspended') br.ctx.resume().catch(() => {})
-    document.removeEventListener('touchend', unlock)
-    document.removeEventListener('click', unlock)
+    if (br && br.ctx) br.ensureRunning()
   }
-  document.addEventListener('touchend', unlock)
-  document.addEventListener('click', unlock)
+  document.addEventListener('touchend', unlock, { passive: true })
+  document.addEventListener('click', unlock, { passive: true })
+  document.addEventListener('touchstart', unlock, { passive: true })
 }
 
 function initThemeSwitcher() {

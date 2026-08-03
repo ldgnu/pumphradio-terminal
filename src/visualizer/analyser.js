@@ -43,7 +43,11 @@ export class AnalyserBridge {
   }
 
   ensureRunning() {
-    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {})
+    // iOS: el contexto puede estar 'suspended' (autoplay policy) o
+    // 'interrupted' (llamada, screen lock, Siri). Ambos necesitan resume().
+    if (this.ctx && (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted')) {
+      this.ctx.resume().catch(() => {})
+    }
   }
 
   // Devuelve true si hay datos reales que leer.
