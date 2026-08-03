@@ -43,14 +43,14 @@
       "tagline": "early · raw · euphoric · reverse bass",
       "genres": ["Hardstyle", "Early Hardstyle", "Rawstyle", "Raw Hardstyle", "Euphoric Hardstyle", "Reverse Bass"],
       "subgenres": ["hardstyle", "rawstyle", "euphoric", "reversebass"],
-      "streamUrl": "",
-      "metadataUrl": "",
-      "metaType": "none",
+      "streamUrl": "https://stream.zeno.fm/gpv2kgzwum0uv",
+      "metadataUrl": "https://api.zeno.fm/mounts/metadata/subscribe/e4vzegzwum0uv",
+      "metaType": "zeno-sse",
       "accent": "#7aa2f7",
       "node": "HS-02",
       "bpmHint": 150,
       "scene": ["netherlands", "australia", "germany"],
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "hardcore",
