@@ -80,3 +80,29 @@
   --signal:    #9ece6a;
   --border:    #414868;
 }
+
+/* --- TTY Linux (consola clásica: negro, texto blanco/gris, prompt verde ambar) --- */
+[data-theme="tty-linux"] {
+  --bg:        #000000;
+  --bg-raise:  #0a0a0a;
+  --fg:        #c0c0c0;
+  --dim:       #606060;
+  --accent:    #00ff00;     /* verde prompt, igual que el shell clásico */
+  --warning:   #ffb000;     /* ámbar de los enlaces / focus */
+  --error:     #ff3030;
+  --signal:    #00ff00;
+  --border:    #303030;
+}
+
+/* --- Matrix (verde sobre negro, tipografía mono, glow) --- */
+[data-theme="matrix"] {
+  --bg:        #000000;
+  --bg-raise:  #050805;
+  --fg:        #00ff41;
+  --dim:       #1f7a2c;
+  --accent:    #00ff41;
+  --warning:   #b6ff00;     /* verde-amarillo para los warnings */
+  --error:     #ff0040;
+  --signal:    #00ff41;
+  --border:    #0d3d14;
+}
