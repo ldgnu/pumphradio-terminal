@@ -110,7 +110,7 @@ function renderStationList() {
          data-station="${s.id}">
       <span class="st-num">0${s.num}</span>
       <span class="st-name">${s.name}</span>
-      <span class="st-tag">${s.enabled ? (s.nickname || s.genres.slice(0, 2).join(' · ')) : 'no signal'}</span>
+      <span class="st-tag">${s.enabled ? (s.nickname ? `${s.nickname} — ${s.tagline}` : s.tagline) : 'no signal'}</span>
       ${s.enabled ? '<span class="st-live">●</span>' : ''}
     </div>
   `).join('')
