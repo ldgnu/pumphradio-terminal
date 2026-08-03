@@ -42,6 +42,25 @@ html, body {
 .brand-name { font-weight: 700; letter-spacing: 0.05em; }
 .brand-sub { font-size: 11px; }
 .top-right { display: flex; gap: 16px; font-size: 12px; align-items: center; }
+.top-help {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  -webkit-appearance: none; appearance: none;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.top-help:hover { border-color: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent); }
 
 /* --- Theme switcher (swatches) --- */
 .theme-sw { display: flex; gap: 5px; align-items: center; }
@@ -165,6 +184,9 @@ html, body {
   font-size: 16px;
 }
 .pb-play.playing { border-color: var(--accent); box-shadow: 0 0 14px rgba(255,95,86,0.3); }
+.pb-fav.on { border-color: var(--error); color: var(--error); box-shadow: 0 0 10px rgba(255,95,86,0.35); }
+.pb-fav.on::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 12px rgba(255,95,86,0.25); }
+.pb-fav { position: relative; }
 .pb-mini { min-width: 28px; font-size: 15px; }
 .pb-icon-play, .pb-icon-pause { width: 20px; height: 20px; }
 .pb-icon-play.hidden, .pb-icon-pause.hidden { display: none; }
@@ -262,6 +284,19 @@ html, body {
 .ni-title { flex: 1; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .news-item:hover .ni-title { color: var(--accent); }
 .ni-src { color: var(--dim); font-size: 10px; flex-shrink: 0; }
+.ni-tag {
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  padding: 0 4px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.ni-fresh { font-size: 9px; flex-shrink: 0; letter-spacing: 0.05em; }
+.ni-fresh.fresh-new { color: var(--signal); }
+.ni-fresh.fresh-warm { color: var(--warning); }
 .news-empty { padding: 8px; font-size: 12px; }
 @keyframes news-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
@@ -403,3 +438,185 @@ html, body {
   .statusbar { gap: 14px; padding: 0 2px; }
   .cmd-line { padding: 0 2px; }
 }
+
+/* ============================================================
+   OVERLAY GENÉRICO (help / history / favorites)
+   ============================================================ */
+.ov-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 70;
+}
+.overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -46%) scale(0.96);
+  width: min(620px, 94vw);
+  max-height: 80vh;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px var(--bg), 0 0 40px rgba(0,0,0,0.6), 0 0 60px color-mix(in srgb, var(--accent) 18%, transparent);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.overlay.open { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+.ov-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ov-title { color: var(--accent); font-size: 12px; letter-spacing: 0.15em; font-weight: 700; }
+.ov-close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none; border-radius: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.ov-close:hover { border-color: var(--error); color: var(--error); }
+.ov-body { overflow-y: auto; padding: 14px 16px; font-size: 12px; }
+.ov-section { margin-bottom: 16px; }
+.ov-h { color: var(--dim); font-size: 11px; letter-spacing: 0.12em; margin-bottom: 8px; }
+.ov-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 16px;
+  align-items: baseline;
+}
+.ov-k, .ov-cmd { color: var(--accent); font-size: 11px; white-space: nowrap; }
+.ov-k::before { content: '['; opacity: 0.5; }
+.ov-k::after { content: ']'; opacity: 0.5; }
+.ov-d { color: var(--fg); }
+.ov-foot { margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 10px; letter-spacing: 0.05em; }
+
+/* ============================================================
+   AMBIENT MODE — fullscreen now-playing (reusa #viz-canvas)
+   ============================================================ */
+body.ambient .topbar,
+body.ambient .now-panel,
+body.ambient .player-bar,
+body.ambient .stations,
+body.ambient .news,
+body.ambient .statusbar,
+body.ambient .cmd-line,
+body.ambient .cmd-log { display: none !important; }
+body.ambient .main { padding: 0; overflow: hidden; }
+body.ambient .viz {
+  position: fixed;
+  inset: 0;
+  height: auto;
+  margin: 0;
+  border: none;
+  z-index: 90;
+}
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 91;
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 26px;
+  pointer-events: none;
+}
+body.ambient .ambient-layer { display: flex; }
+.am-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+.am-brand { color: var(--accent); font-weight: 700; text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
+.am-actions { display: flex; gap: 10px; pointer-events: auto; }
+.am-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none; border-radius: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.am-btn:hover { border-color: var(--accent); color: var(--accent); }
+.am-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.7);
+}
+.am-cover { pointer-events: auto; cursor: pointer; }
+.am-cover img {
+  width: min(220px, 50vw);
+  height: min(220px, 50vw);
+  object-fit: cover;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.am-artist {
+  font-size: clamp(22px, 5vw, 42px);
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.am-track { font-size: clamp(15px, 3vw, 26px); color: var(--accent); }
+.am-hint { font-size: 12px; letter-spacing: 0.05em; }
+.am-viz {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none; border-radius: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+@media (max-width: 640px) {
+  .overlay { width: 96vw; }
+  .am-brand { font-size: 11px; }
+  .ambient-layer { padding: 14px 16px; }
+}
+
+/* --- history / favorites rows --- */
+.hist-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 2px;
+  border-bottom: 1px dashed var(--border);
+  font-size: 12px;
+}
+.hist-num { width: 22px; font-size: 11px; flex-shrink: 0; }
+.hist-artist { color: var(--accent); min-width: 130px; flex-shrink: 0; }
+.hist-track { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hist-st { font-size: 10px; flex-shrink: 0; text-transform: uppercase; }
+.fav-del {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  font-family: var(--font);
+  font-size: 10px;
+  padding: 1px 6px;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none; border-radius: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.fav-del:hover { border-color: var(--error); color: var(--error); }

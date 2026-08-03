@@ -21,9 +21,16 @@ funcional.
 - **Metadata en vivo** — Artist/Track reales del stream (Zeno SSE / ICY).
 - **Noticias RSS multi-fuente** en español (traducción con tono de experto), con panel
   lateral estilo tmux y link siempre a la fuente original.
-- **Terminal de comandos** (`/`): play, pause, next, station, news, status, whoami, time, signal, help.
-- **Boot sequence** saltable, scanlines sutiles, cursor, reloj UTC.
-- **Responsive** — optimizado para iPhone/móvil (100dvh, touch targets, sin atajos de teclado en táctil).
+- **Terminal de comandos** (`/`): play, pause, next, station, news, history, favorites,
+  ambient, uptime, stats, theme, viz, signal, help y más.
+- **Boot sequence** cinematográfica (logo ASCII + typewriter + barra de progreso), saltable,
+  scanlines sutiles, cursor, reloj UTC.
+- **Modo AMBIENT** (`A` / `ambient`): now-playing a pantalla completa con visualizador.
+- **Historial de tracks** (`H` / `history`) y **favoritos ♥** (`F` / `favorites`), persistidos en localStorage.
+- **Overlay de ayuda** (`?` o botón `?` en la topbar): lista atajos y comandos. Botón visible para táctil.
+- **Teclas extra**: `T` cicla themes, `H` historial, `F` favorito, `A` ambient, `?` ayuda.
+- **Responsive** — optimizado para iPhone/móvil (100dvh, touch targets, sin atajos de teclado en táctil,
+  overlay y ambient fullscreen en táctil).
 
 ---
 

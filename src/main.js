@@ -5,7 +5,7 @@
 import './css/tokens.css'
 import './css/shell.css'
 import './css/fx.css'
-import { STATIONS, getState, setStation } from './store.js'
+import { STATIONS, getState, setStation, on } from './store.js'
 import { audio } from './engine/audio.js'
 import { initShell } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
@@ -13,6 +13,11 @@ import { initCommand, openCommand } from './ui/command.js'
 import { initNews, initPaneControls } from './news/engine.js'
 import { Visualizer } from './visualizer/index.js'
 import { getState as gs } from './store.js'
+import { initSession, toggleFavorite, getStats, fmtDuration, isFavorite } from './session.js'
+import { initOverlay, isOverlayOpen, closeOverlay } from './ui/overlay.js'
+import { openHelp } from './ui/help.js'
+import { openHistory, openFavorites, currentTrackLine } from './ui/views.js'
+import { initAmbient, initAmbientControls, toggleAmbient, closeAmbient, openAmbient, isAmbient } from './ui/ambient.js'
 
 let viz = null
 let commandOpen = false
@@ -27,6 +32,13 @@ function init() {
   initThemeSwitcher()
   initVisualizer()
   initIosUnlock()
+  initSession()
+  initOverlay()
+  initAmbient()
+  initAmbientControls()
+  initFavButton()
+  const helpBtn = document.getElementById('btn-help')
+  if (helpBtn) helpBtn.addEventListener('click', () => openHelp())
 
   // Cargar estación inicial (la primera habilitada)
   const first = STATIONS.find(s => s.enabled)
@@ -61,6 +73,30 @@ function initVisualizer() {
   viz.loop()
 }
 
+function initFavButton() {
+  const b = document.getElementById('btn-fav')
+  if (!b) return
+  const update = () => {
+    const st = getState()
+    const key = { artist: st.now.artist, track: st.now.track || st.now.display }
+    const on = !!(st.now.artist || st.now.track) && isFavorite(key)
+    b.classList.toggle('on', on)
+    b.title = on ? 'Quitar favorito (F)' : 'Guardar favorito (F)'
+  }
+  b.addEventListener('click', () => {
+    const st = getState()
+    if (st.now.artist || st.now.track) {
+      toggleFavorite({ artist: st.now.artist, track: st.now.track, display: st.now.display })
+      update()
+      const l = document.getElementById('cmd-log')
+      if (l) l.textContent = isFavorite({ artist: st.now.artist, track: st.now.track }) ? '♥ favorited' : '♥ removed'
+    }
+  })
+  // actualizar estado del botón cuando cambia el track
+  on('now', update)
+  on('playing', update)
+}
+
 function bindKeyboard() {
   document.addEventListener('keydown', (e) => {
     // si el comando está abierto, no interceptar
@@ -68,11 +104,21 @@ function bindKeyboard() {
     if (document.activeElement === cmdInput) return
 
     const key = e.key.toLowerCase()
+    // Escape: cerrar overlays/ambient antes que nada
+    if (e.key === 'Escape') {
+      if (isAmbient()) { closeAmbient(); e.preventDefault(); return }
+      if (isOverlayOpen()) { closeOverlay(); e.preventDefault(); return }
+      return
+    }
 
     switch (key) {
       case '/':
         e.preventDefault()
         openCommand()
+        break
+      case '?':
+        e.preventDefault()
+        openHelp()
         break
       case ' ':
         e.preventDefault()
@@ -92,6 +138,31 @@ function bindKeyboard() {
       case 'p':
         audio.pause()
         break
+      case 'h':
+        openHistory()
+        break
+      case 'f': {
+        const st = gs()
+        if (st.now.artist || st.now.track) {
+          toggleFavorite({ artist: st.now.artist, track: st.now.track, display: st.now.display })
+          document.getElementById('btn-fav')?.classList.toggle('on', isFavorite({ artist: st.now.artist, track: st.now.track }))
+        }
+        break
+      }
+      case 'a':
+        toggleAmbient()
+        if (viz) setTimeout(() => viz.onResize(), 80)
+        break
+      case 't': {
+        const themes = ['one-dark', 'dracula', 'nord', 'gruvbox', 'tokyo-night', 'tty-linux', 'matrix']
+        const cur = document.documentElement.dataset.theme || 'one-dark'
+        const next = themes[(themes.indexOf(cur) + 1) % themes.length]
+        document.documentElement.dataset.theme = next
+        localStorage.setItem('pumphradio-theme', next)
+        const l = document.getElementById('cmd-log')
+        if (l) l.textContent = '> theme: ' + next
+        break
+      }
       case 'arrowup':
         e.preventDefault()
         audio.setVolume(getState().volume + 5)

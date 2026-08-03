@@ -41,6 +41,7 @@
         <span class="brand-sub dim">underground frequencies</span>
       </div>
       <div class="top-right">
+        <button id="btn-help" class="top-help" title="Ayuda / atajos (?)" aria-label="Ayuda">?</button>
         <div class="theme-sw" id="theme-sw" title="Tema">
           <button class="swatch" data-theme-set="one-dark"     style="--c:#61afef" title="One Dark"       aria-label="Tema One Dark"></button>
           <button class="swatch" data-theme-set="dracula"      style="--c:#bd93f9" title="Dracula"        aria-label="Tema Dracula"></button>
@@ -96,6 +97,7 @@
           <svg id="pb-icon-pause" class="pb-icon-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
         </button>
         <button id="btn-next" class="pb-btn" aria-label="Siguiente">⏭</button>
+        <button id="btn-fav" class="pb-btn pb-fav" title="Guardar favorito (F)" aria-label="Favorito">♥</button>
 
         <div class="pb-vol-wrap">
           <button id="btn-vol-down" class="pb-btn pb-mini" aria-label="Bajar volumen">−</button>
@@ -142,7 +144,7 @@
       <span id="status-play" class="status-item">STANDBY</span>
       <span id="status-buffer" class="status-item dim">BUFFER --%</span>
       <span id="status-vol" class="status-item dim">VOL 80%</span>
-      <span class="status-item dim status-hint">/ cmd · 1-4 station · SPACE play · V viz</span>
+      <span class="status-item dim status-hint">/ cmd · ? help · 1-4 station · SPACE play · V viz · A ambient · F fav · H history</span>
     </footer>
 
     <!-- Command line -->
@@ -167,6 +169,34 @@
       </div>
     </aside>
     <div id="pane-scrim" class="pane-scrim" hidden></div>
+
+    <!-- Generic terminal overlay (help / history / favorites) -->
+    <div id="ov-scrim" class="ov-scrim" hidden></div>
+    <aside id="overlay" class="overlay" aria-hidden="true">
+      <div class="ov-head">
+        <span class="ov-title" id="ov-title">HELP</span>
+        <button id="ov-close" class="ov-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="ov-body" id="ov-body"></div>
+    </aside>
+
+    <!-- Ambient fullscreen now-playing (reusa #viz-canvas via CSS) -->
+    <section class="ambient-layer" id="ambient-layer" aria-hidden="true">
+      <div class="am-top">
+        <span class="am-brand">PUMPHRADIO</span>
+        <span class="am-station dim" id="am-station">—</span>
+        <span class="am-actions">
+          <button id="am-play" class="am-btn" aria-label="play/pause">▶</button>
+          <button id="am-close" class="am-btn" aria-label="cerrar ambient">esc ✕</button>
+        </span>
+      </div>
+      <div class="am-center">
+        <div id="am-cover" class="am-cover" hidden><img id="am-cover-img" alt="cover" /></div>
+        <div class="am-artist" id="am-artist">—</div>
+        <div class="am-track" id="am-track">—</div>
+        <div class="am-hint dim">click cover · play/pause · <button id="am-viz" class="am-viz">viz mode (V)</button></div>
+      </div>
+    </section>
 
   </div>
 

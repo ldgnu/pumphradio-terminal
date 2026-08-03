@@ -10,6 +10,10 @@
 import { STATIONS, getState, setStation, setVisualizer, setView } from '../store.js'
 import { audio } from '../engine/audio.js'
 import { renderForStation } from '../news/engine.js'
+import { getHistory, getFavorites, toggleFavorite, getStats, fmtDuration, isFavorite } from '../session.js'
+import { openHistory, openFavorites } from './views.js'
+import { toggleAmbient, isAmbient } from './ambient.js'
+import { openHelp } from './help.js'
 
 let input = null
 let open = false
@@ -77,6 +81,44 @@ function run(cmd) {
       renderForStation(getState().station)
       log('> signal intelligence · ' + (getState().station?.name || 'all'))
       break
+    case 'history':
+    case 'log':
+      openHistory()
+      break
+    case 'fav':
+    case 'favorites':
+    case '♥':
+      openFavorites()
+      break
+    case 'ambient':
+    case 'am':
+      toggleAmbient()
+      log(isAmbient() ? '> ambient ON' : '> ambient OFF')
+      break
+    case 'uptime':
+      log('> session uptime: ' + fmtDuration(getStats().sessionSeconds) + ' · total: ' + fmtDuration(getStats().totalSeconds))
+      break
+    case 'stats':
+      log('> stats · session ' + fmtDuration(getStats().sessionSeconds) + ' · total ' + fmtDuration(getStats().totalSeconds) + ' · tracks ' + getStats().totalTracks + ' · favs ' + getStats().favorites)
+      break
+    case 'theme': {
+      const themes = ['one-dark', 'dracula', 'nord', 'gruvbox', 'tokyo-night', 'tty-linux', 'matrix']
+      const cur = document.documentElement.dataset.theme || 'one-dark'
+      if (a && themes.includes(a)) {
+        document.documentElement.dataset.theme = a
+        localStorage.setItem('pumphradio-theme', a)
+        log('> theme: ' + a)
+      } else {
+        log('> theme (' + cur + ') · ' + themes.join(' | '))
+      }
+      break
+    }
+    case 'clear':
+    case 'cls': {
+      const area = document.getElementById('cmd-log')
+      if (area) area.textContent = ''
+      break
+    }
     case 'whoami':
       log('> root@pumphradio:~$ underground listener · node ' + (getState().station?.node || '---'))
       break
@@ -88,7 +130,7 @@ function run(cmd) {
       log('> ' + (getState().station?.name || 'no station') + ' · ' + (getState().playing ? 'PLAYING' : 'PAUSED') + ' · vol ' + getState().volume + '%')
       break
     case 'signal':
-      log('> SIGNAL ' + (88 + Math.floor(Math.random() * 12)) + '% · NODE ' + (getState().station?.node || '---'))
+      log('> SIGNAL ' + (88 + Math.floor(Math.random() * 12)) + '% · NODE ' + (getState().station?.node || '---') + ' · BPM ' + (getState().station?.bpmHint || '?') + ' · ' + (getState().playing ? 'LOCKED' : 'IDLE'))
       break
     case 'volume': {
       const v = parseInt(a, 10)
@@ -96,11 +138,12 @@ function run(cmd) {
       break
     }
     case 'visualizer':
+    case 'viz':
       setVisualizer(a || 'spectrum'); log('> visualizer ' + (a || 'spectrum')); break
     case 'view':
       setView(a || 'nowplaying'); log('> view ' + (a || 'nowplaying')); break
     case 'help':
-      log('> play | pause | next | station <id> | news | status | whoami | time | signal | volume <0-100> | visualizer | help')
+      openHelp()
       break
     case 'quit':
       close(); break

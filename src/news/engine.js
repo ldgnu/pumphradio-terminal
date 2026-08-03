@@ -41,10 +41,18 @@ function itemsForStation(station) {
 }
 
 function cleanTitle(t) {
+  // decodificar entidades HTML antes (&#8211; → –, &amp; → &, etc.)
+  let s = decodeEntities(t)
   // prettify títulos de feeds de releases (underscores → espacios, quitar catálogo)
-  let s = t.replace(/_/g, ' ')
+  s = s.replace(/_/g, ' ')
   s = s.replace(/\s*[-–—]\s*[A-Z]{2,6}-?\d{2,4}.*$/i, '') // quitar "-(LABELxxx)-WEB-2026"
   return s.trim()
+}
+
+function decodeEntities(s) {
+  const d = document.createElement('textarea')
+  d.innerHTML = String(s)
+  return d.value
 }
 
 export function renderForStation(station) {
@@ -59,6 +67,8 @@ export function renderForStation(station) {
     <div class="news-item" data-idx="${i}">
       <span class="ni-time">${fmtDate(it.date)}</span>
       <span class="ni-title">${escapeHtml(cleanTitle(it.title))}</span>
+      ${it.genres?.[0] ? `<span class="ni-tag">${escapeHtml(it.genres[0])}</span>` : ''}
+      ${freshness(it.date) ? `<span class="ni-fresh ${freshness(it.date).cls}">${freshness(it.date).label}</span>` : ''}
       <span class="ni-src dim">${escapeHtml(it.source)}</span>
     </div>
   `).join('')
@@ -128,6 +138,17 @@ function fmtDate(d) {
   const mm = String(dt.getMinutes()).padStart(2, '0')
   if (dt.toDateString() === now.toDateString()) return hh + ':' + mm
   return (dt.getMonth() + 1) + '/' + dt.getDate()
+}
+
+/** Frescura relativa: NUEVO < 6h, HACE < 24h, else '' */
+function freshness(d) {
+  if (!d) return ''
+  const ts = Date.parse(d)
+  if (isNaN(ts)) return ''
+  const hours = (Date.now() - ts) / 3600000
+  if (hours < 6) return { label: 'NUEVO', cls: 'fresh-new' }
+  if (hours < 24) return { label: 'HACE ' + Math.floor(hours) + 'h', cls: 'fresh-warm' }
+  return ''
 }
 
 function fmtFullDate(d) {

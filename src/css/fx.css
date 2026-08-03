@@ -26,6 +26,35 @@
 .boot-status { color: var(--signal); }
 .boot-ready { color: var(--fg); margin-top: 10px; }
 .boot-hint { position: absolute; bottom: 24px; font-size: 11px; }
+.boot-logo {
+  font-size: 8px;
+  line-height: 1.05;
+  color: var(--accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 55%, transparent);
+  margin-bottom: 12px;
+  white-space: pre;
+  user-select: none;
+  letter-spacing: 0;
+}
+.boot-log { font-size: 13px; display: flex; flex-direction: column; gap: 3px; min-height: 96px; }
+.boot-bar-wrap {
+  width: 220px;
+  height: 2px;
+  background: var(--border);
+  margin-top: 16px;
+  overflow: hidden;
+}
+.boot-bar {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transition: width 0.12s linear;
+}
+@media (max-width: 640px) {
+  .boot-logo { font-size: 5px; }
+  .boot-log { font-size: 11px; }
+}
 
 /* --- Scanlines sutiles --- */
 .scanlines {
