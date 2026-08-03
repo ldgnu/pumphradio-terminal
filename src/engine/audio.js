@@ -1,42 +1,76 @@
 /**
- * audio.js — Player global persistente.
+ * audio.js — Player global persistente con Web Audio.
  *
- * Singleton a nivel de módulo: el <audio> se crea una vez y NUNCA se destruye
- * al cambiar de vista o de estación (se reusa). Esto garantiza que el audio
- * no se corte al navegar por la interfaz.
+ * Singleton a nivel de módulo: el <audio> se crea una vez y NUNCA se destruye.
+ * Para el visualizador real usa un grafo Web Audio:
+ *   mediaElementSource → analyser → gain → destination
+ * El stream de Zeno manda `access-control-allow-origin: *`, así que
+ * crossOrigin='anonymous' permite que el AnalyserNode reciba audio real.
+ * Si un stream NO manda CORS, hay fallback: se recarga sin analizador
+ * (visualizer pasa a modo simulado) y el audio no se corta.
  *
  * Metadata:
  *  - "zeno-sse": EventSource a api.zeno.fm/mounts/metadata/subscribe/<id>
- *  - "icy":      parseo de headers ICY (cuando el stream lo permite)
  *  - "none":     sin metadata
- *
- * Reconexión con backoff exponencial.
  */
 import { setPlaying, setLoading, setNow, getState, setVolume as storeSetVolume } from '../store.js'
 import { parseStreamTitle } from './metadata.js'
+import { AnalyserBridge } from '../visualizer/analyser.js'
 
 class AudioEngine {
   constructor() {
     this.audio = new Audio()
     this.audio.preload = 'none'
+    this.audio.crossOrigin = 'anonymous' // permite analizador real (requiere CORS)
     this.station = null
     this.eventSource = null
     this.reconnectTimer = null
     this.reconnectAttempts = 0
     this.maxReconnect = 5
     this.baseDelay = 3000
+    this.corsFallback = false
+    this.bridge = new AnalyserBridge(this.audio)
+    this.lastTitle = ''
     this.bindEvents()
   }
 
   bindEvents() {
-    this.audio.onplay = () => setPlaying(true)
+    this.audio.onplay = () => { setPlaying(true); this.bridge.ensureRunning() }
     this.audio.onpause = () => setPlaying(false)
     this.audio.onwaiting = () => setLoading(true)
     this.audio.onplaying = () => setLoading(false)
     this.audio.onerror = () => {
       setLoading(false)
+      // Si estábamos en modo CORS (analizador real) y falla, recargar sin él
+      if (!this.corsFallback) {
+        this.toFallback()
+      }
       this.scheduleReconnect()
     }
+  }
+
+  // Pasa a modo sin-Web-Audio (stream sin CORS): audio sigue, visualizer simulado.
+  toFallback() {
+    this.corsFallback = true
+    try { this.bridge.disconnect() } catch { /* ignore */ }
+    try { if (this.bridge.ctx && this.bridge.ctx.state !== 'closed') this.bridge.ctx.close() } catch { /* ignore */ }
+    // recrear audio sin crossOrigin
+    this.audio.pause()
+    const src = this.audio.src
+    this.audio = new Audio()
+    this.audio.preload = 'none'
+    this.audio.volume = getState().volume / 100
+    if (src) this.audio.src = src
+    // rebind
+    const that = this
+    this.audio.onplay = () => setPlaying(true)
+    this.audio.onpause = () => setPlaying(false)
+    this.audio.onwaiting = () => setLoading(true)
+    this.audio.onplaying = () => setLoading(false)
+    this.audio.onerror = () => setLoading(false)
+    if (src) { this.audio.load(); this.audio.play().catch(() => setLoading(false)) }
+    console.warn('[audio] CORS fallback (sin analizador real)')
+    that.bridge = null
   }
 
   loadStation(station) {
@@ -47,9 +81,10 @@ class AudioEngine {
     this.station = station
 
     this.audio.src = station.streamUrl
-    this.audio.volume = getState().volume / 100
+    this.applyVolume(getState().volume)
     setLoading(true)
     this.audio.load()
+    this.bridge.ensureRunning()
     this.audio.play().catch(() => setLoading(false))
 
     this.connectMetadata(station)
@@ -67,7 +102,6 @@ class AudioEngine {
         }
       } catch { /* ignore */ }
     } else if (station.metaType === 'none') {
-      // sin metadata — mostrar el nombre de la estación
       setNow({ artist: station.name, track: '', streamTitle: '', source: 'none' })
     }
   }
@@ -92,13 +126,24 @@ class AudioEngine {
     }, delay)
   }
 
-  play() { if (this.audio.src) this.audio.play().catch(() => {}) }
+  play() {
+    if (this.bridge) this.bridge.ensureRunning()
+    if (this.audio.src) this.audio.play().catch(() => {})
+  }
   pause() { this.audio.pause() }
   toggle() { this.audio.paused ? this.play() : this.pause() }
 
+  applyVolume(v) {
+    const vol = Math.max(0, Math.min(100, v))
+    if (this.bridge && this.bridge.gain) {
+      this.bridge.gain.gain.value = vol / 100
+    }
+    this.audio.volume = vol / 100
+  }
+
   setVolume(v) {
     const vol = Math.max(0, Math.min(100, v))
-    this.audio.volume = vol / 100
+    this.applyVolume(vol)
     storeSetVolume(vol)
     localStorage.setItem('pumphradio_volume', String(vol))
   }
@@ -107,7 +152,10 @@ class AudioEngine {
     const saved = parseInt(localStorage.getItem('pumphradio_volume') || '80', 10)
     this.setVolume(saved)
   }
+
+  getAnalyser() {
+    return this.corsFallback || !this.bridge ? null : this.bridge
+  }
 }
 
-// Singleton global — nunca se recrea.
 export const audio = new AudioEngine()

@@ -11,7 +11,10 @@ import { initShell } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
 import { initCommand, openCommand } from './ui/command.js'
 import { initNews } from './news/engine.js'
+import { Visualizer } from './visualizer/index.js'
+import { getState as gs } from './store.js'
 
+let viz = null
 let commandOpen = false
 
 function init() {
@@ -19,6 +22,8 @@ function init() {
   initShell()
   initCommand()
   initNews()
+  initPlayerBar()
+  initVisualizer()
 
   // Cargar estación inicial (la primera habilitada)
   const first = STATIONS.find(s => s.enabled)
@@ -30,6 +35,27 @@ function init() {
   bindKeyboard()
 
   document.getElementById('app').classList.add('visible')
+  // la app pasa de display:none a flex → re-dimensionar el canvas del visualizador
+  setTimeout(() => { if (viz) viz.onResize() }, 60)
+  setTimeout(() => { if (viz) viz.onResize() }, 400)
+}
+
+function initPlayerBar() {
+  const $ = (id) => document.getElementById(id)
+  $('btn-play').addEventListener('click', () => audio.toggle())
+  $('btn-prev').addEventListener('click', () => prevStation())
+  $('btn-next').addEventListener('click', () => nextStation())
+  $('btn-vol-down').addEventListener('click', () => audio.setVolume(gs().volume - 5))
+  $('btn-vol-up').addEventListener('click', () => audio.setVolume(gs().volume + 5))
+  $('btn-mute').addEventListener('click', () => audio.setVolume(gs().volume > 0 ? 0 : 80))
+  $('btn-viz-mode').addEventListener('click', () => { if (viz) viz.nextMode() })
+}
+
+function initVisualizer() {
+  const canvas = document.getElementById('viz-canvas')
+  if (!canvas) return
+  viz = new Visualizer(canvas, document.getElementById('viz-label'))
+  viz.loop()
 }
 
 function bindKeyboard() {
@@ -56,6 +82,9 @@ function bindKeyboard() {
       }
       case 'n':
         nextStation()
+        break
+      case 'v':
+        if (viz) { viz.nextMode(); logMode() }
         break
       case 'p':
         audio.pause()
@@ -86,11 +115,28 @@ function bindKeyboard() {
 function nextStation() {
   const enabled = STATIONS.filter(s => s.enabled)
   if (!enabled.length) return
-  const cur = getState().station
+  const cur = gs().station
   const idx = enabled.findIndex(s => s.id === cur?.id)
   const next = enabled[(idx + 1) % enabled.length]
   setStation(next)
   audio.loadStation(next)
+}
+
+function prevStation() {
+  const enabled = STATIONS.filter(s => s.enabled)
+  if (!enabled.length) return
+  const cur = gs().station
+  const idx = enabled.findIndex(s => s.id === cur?.id)
+  const prev = enabled[(idx - 1 + enabled.length) % enabled.length]
+  setStation(prev)
+  audio.loadStation(prev)
+}
+
+function logMode() {
+  if (viz) {
+    const l = document.getElementById('cmd-log')
+    if (l) { l.textContent = '> visualizer: ' + viz.mode.toUpperCase() }
+  }
 }
 
 // Arranque

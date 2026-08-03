@@ -13,7 +13,7 @@ export function initShell() {
   // Suscripciones
   on('now', renderNow)
   on('station', () => { renderHeader(); renderStationList(); renderNow() })
-  on('playing', () => { renderStatusBar(); renderNow() })
+  on('playing', () => { renderStatusBar(); renderNow(); renderPlayIcon() })
   on('loading', renderStatusBar)
   on('volume', renderStatusBar)
   on('elapsed', () => { const el = $('#elapsed'); if (el) el.textContent = fmtElapsed(getState().elapsed) })
@@ -21,6 +21,17 @@ export function initShell() {
 
   startClock()
   renderNow()
+  renderPlayIcon()
+}
+
+function renderPlayIcon() {
+  const playing = getState().playing
+  const p = $('#pb-icon-play')
+  const ps = $('#pb-icon-pause')
+  if (p) p.classList.toggle('hidden', playing)
+  if (ps) ps.classList.toggle('hidden', !playing)
+  const btn = $('#btn-play')
+  if (btn) btn.classList.toggle('playing', playing)
 }
 
 function renderHeader() {
@@ -48,6 +59,10 @@ export function renderNow() {
 
   const el = $('#elapsed')
   if (el) el.textContent = fmtElapsed(st.elapsed)
+
+  // player bar
+  setText('#pb-track', (st.now.display || st.now.track) ? ((st.now.display || st.now.track).slice(0, 40)) : '—')
+  setText('#pb-station', station?.name || '—')
 }
 
 function renderStationList() {
@@ -73,6 +88,8 @@ function renderStatusBar() {
   if (play) play.textContent = st.loading ? 'BUFFERING' : (st.playing ? 'PLAYING' : 'PAUSED')
   if (buf) buf.textContent = st.loading ? 'BUFFER ' + (70 + Math.random() * 30 | 0) + '%' : 'BUFFER 100%'
   if (vol) vol.textContent = 'VOL ' + st.volume + '%'
+  const vlabel = $('#vol-label')
+  if (vlabel) vlabel.textContent = st.volume + '%'
 }
 
 export function setText(id, text) {
