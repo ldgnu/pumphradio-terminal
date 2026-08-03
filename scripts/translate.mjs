@@ -31,35 +31,52 @@ const T = {
   'REBELLiON Indoor onthult': 'REBELLiON Indoor presenta un programa cargado de battles exclusivas y shows en vivo',
 }
 
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+
+// Divide en chunks de <= ~800 chars por límites de palabra (robusto, no
+// depende de puntuación — títulos sin '.'/'!'/'?' antes se perdían).
+function chunkText(text, size = 800) {
+  const out = []
+  let cur = ''
+  for (const part of text.split(/(\s+)/)) {
+    if (cur.length + part.length > size && cur.trim()) {
+      out.push(cur.trim())
+      cur = part
+    } else cur += part
+  }
+  if (cur.trim()) out.push(cur.trim())
+  return out.length ? out : [text.trim()]
+}
+
+// Traduce un texto con delay + retry (gtx rate-limitea en ráfagas).
+// Devuelve '' si no pudo (para que el caller decida el fallback).
 async function translateText(text, src) {
   if (!text) return ''
-  // chunk por frases hasta ~900 chars para no reventar la URL
-  const sentences = text.match(/[^.!?]+[.!?]+|\s*$/g) || [text]
+  const chunks = chunkText(text)
   let out = ''
-  let buf = ''
-  const flush = async () => {
-    if (!buf.trim()) return
-    try {
-      const url = `${GTX}?client=gtx&sl=${src || 'auto'}&tl=es&dt=t&q=${encodeURIComponent(buf.trim())}`
-      const res = await fetch(url, { headers: { 'User-Agent': 'PumphRadio/0.1 (https://pumphradio.com.ar)' } })
-      if (!res.ok) { out += (out ? ' ' : '') + buf.trim(); buf = ''; return }
-      const data = await res.json()
-      const joined = (data[0] || []).map(seg => seg[0] || '').join('')
-      out += (out ? ' ' : '') + joined
-    } catch { out += (out ? ' ' : '') + buf.trim() }
-    buf = ''
+  let ok = true
+  for (const c of chunks) {
+    let done = false
+    for (let t = 1; t <= 3 && !done; t++) {
+      try {
+        await sleep(200 * t) // espaciar: evita rate-limit
+        const url = `${GTX}?client=gtx&sl=${src || 'auto'}&tl=es&dt=t&q=${encodeURIComponent(c)}`
+        const res = await fetch(url, { headers: { 'User-Agent': 'PumphRadio/0.1 (https://pumphradio.com.ar)' } })
+        if (!res.ok) continue
+        const data = await res.json()
+        const joined = (data[0] || []).map(seg => seg[0] || '').join('').trim()
+        if (joined) { out += (out ? ' ' : '') + joined; done = true }
+        else continue
+      } catch { /* retry */ }
+    }
+    if (!done) { ok = false; break }
   }
-  for (const s of sentences) {
-    if (s.trim().length === 0) continue
-    if (buf.length + s.length > 900) { await flush() }
-    buf += s
-  }
-  await flush()
-  return out.trim()
+  return ok ? out.trim() : ''
 }
 
 let hitApi = 0
 let hitCur = 0
+let failed = 0
 
 for (const item of news.items) {
   // Capa 1: mapa curado
@@ -73,12 +90,20 @@ for (const item of news.items) {
   // Capa 2: API para todo lo demás que no esté en español
   if (item.lang !== 'es') {
     const srcLang = item.lang === 'nl' ? 'nl' : 'auto'
-    item.title = await translateText(item.title, srcLang) || item.title
-    item.summary = await translateText(item.summary || '', srcLang) || item.summary
-    item.lang = 'es'
-    hitApi++
+    const newTitle = await translateText(item.title, srcLang)
+    if (newTitle) {
+      item.title = newTitle
+      const newSummary = await translateText(item.summary || '', srcLang)
+      if (newSummary) item.summary = newSummary
+      item.lang = 'es'
+      hitApi++
+    } else {
+      // no se pudo traducir → se deja en idioma original (honesto, no miente lang)
+      failed++
+    }
   }
 }
 
 writeFileSync(FILE, JSON.stringify(news, null, 2))
-console.log(`✓ ${hitCur} curadas + ${hitApi} por API → ${news.items.length} noticias en español`)
+console.log(`✓ ${hitCur} curadas + ${hitApi} por API · ${failed} sin traducir → ${news.items.length} items`)
+if (failed > 0) process.exitCode = 2
