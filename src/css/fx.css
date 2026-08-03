@@ -78,5 +78,86 @@
 
 /* --- Reducción de movimiento --- */
 @media (prefers-reduced-motion: reduce) {
-  .cursor, .tty-cursor::after, .st-live { animation: none !important; }
+  .cursor, .tty-cursor::after, .st-live, .pb-playing-wave,
+  .pb-vu-bar, .pb-viz-mode-pulse, .pb-track-flash { animation: none !important; }
+}
+
+/* ============================================================
+   PLAYER BAR FX
+   ============================================================ */
+
+/* 1. Playing wave — borde izquierdo del player bar LED-pulsea cuando suena */
+.player-bar { position: relative; }
+.player-bar::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.player-bar.playing::before {
+  opacity: 0.9;
+  animation: pb-playing-wave 1.4s ease-in-out infinite;
+}
+@keyframes pb-playing-wave {
+  0%, 100% { box-shadow: 0 0 4px var(--accent); }
+  50%      { box-shadow: 0 0 14px var(--accent), 0 0 24px var(--accent); }
+}
+
+/* 2. VU bar — 4 segmentos que se animan con el audio */
+.pb-vu {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: 4px;
+  height: 14px;
+}
+.pb-vu-seg {
+  width: 3px;
+  background: var(--border);
+  border-radius: 1px;
+  transition: background 0.1s ease;
+}
+/* estado activo (en JS .on), color = signal */
+.pb-vu-seg.on { background: var(--signal); }
+.pb-vu-seg.on.peak { background: var(--warning); }
+/* anim random cuando playing */
+.player-bar.playing .pb-vu-seg:nth-child(1) { animation: vu-blink 0.6s steps(2) infinite; }
+.player-bar.playing .pb-vu-seg:nth-child(2) { animation: vu-blink 0.55s steps(2) infinite 0.1s; }
+.player-bar.playing .pb-vu-seg:nth-child(3) { animation: vu-blink 0.5s steps(2) infinite 0.2s; }
+.player-bar.playing .pb-vu-seg:nth-child(4) { animation: vu-blink 0.45s steps(2) infinite 0.3s; }
+@keyframes vu-blink {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+/* 3. Track change flash — scanline horizontal cruza el player cuando cambia el track */
+.pb-track-flash {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.pb-track-flash.flash { animation: pb-flash 0.55s ease-out; }
+@keyframes pb-flash {
+  0%   { opacity: 0; transform: translateY(-50%) scaleX(0); transform-origin: left; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(1); transform-origin: left; }
+}
+
+/* 4. Viz-mode pulse — botón MODE late cuando hay audio */
+.pb-viz-mode-pulse { animation: pb-mode-pulse 2.4s ease-in-out infinite; }
+@keyframes pb-mode-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; color: var(--accent); }
+}
+.viz:has(.viz-canvas) .viz-mode-btn,
+.player-bar.playing .viz-mode-btn { /* selector reservado si la barra es sharing state */
+  /* placeholder */
 }

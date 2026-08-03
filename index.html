@@ -87,6 +87,7 @@
 
       <!-- Player bar (controles visibles) -->
       <section class="player-bar">
+        <div class="pb-track-flash" id="pb-track-flash"></div>
         <button id="btn-prev" class="pb-btn" aria-label="Anterior">⏮</button>
         <button id="btn-play" class="pb-btn pb-play" aria-label="Reproducir / Pausar">
           <svg id="pb-icon-play" class="pb-icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -101,6 +102,13 @@
           <span id="vol-label" class="pb-vol">80%</span>
         </div>
 
+        <div class="pb-vu" id="pb-vu" aria-hidden="true">
+          <span class="pb-vu-seg"></span>
+          <span class="pb-vu-seg"></span>
+          <span class="pb-vu-seg"></span>
+          <span class="pb-vu-seg"></span>
+        </div>
+
         <span id="pb-track" class="pb-track dim">—</span>
         <span id="pb-station" class="pb-station dim">—</span>
       </section>
@@ -109,7 +117,7 @@
       <section class="viz" id="viz">
         <canvas id="viz-canvas" class="viz-canvas"></canvas>
         <div class="viz-label" id="viz-label">SPECTRUM</div>
-        <button id="btn-viz-mode" class="viz-mode-btn" title="Cambiar visualizador (V)">MODE</button>
+        <button id="btn-viz-mode" class="viz-mode-btn pb-viz-mode-pulse" title="Cambiar visualizador (V)">MODE</button>
       </section>
 
       <!-- Stations -->

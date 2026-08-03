@@ -5,6 +5,7 @@
 import { STATIONS, getState, on } from '../store.js'
 
 function $(sel) { return document.querySelector(sel) }
+let lastPbTrack = undefined
 
 export function initShell() {
   renderStationList()
@@ -32,6 +33,9 @@ function renderPlayIcon() {
   if (ps) ps.classList.toggle('hidden', !playing)
   const btn = $('#btn-play')
   if (btn) btn.classList.toggle('playing', playing)
+  // FX: pulse del borde izquierdo del player bar
+  const bar = document.querySelector('.player-bar')
+  if (bar) bar.classList.toggle('playing', playing)
 }
 
 function renderHeader() {
@@ -97,8 +101,20 @@ export function renderNow() {
   if (el) el.textContent = fmtElapsed(st.elapsed)
 
   // player bar
-  setText('#pb-track', (st.now.display || st.now.track) ? ((st.now.display || st.now.track).slice(0, 40)) : '—')
+  const newTrack = (st.now.display || st.now.track) ? ((st.now.display || st.now.track).slice(0, 40)) : '—'
+  setText('#pb-track', newTrack)
   setText('#pb-station', station?.name || '—')
+
+  // FX: flash de scanline cuando cambia el track
+  if (lastPbTrack !== undefined && lastPbTrack !== newTrack) {
+    const flash = $('#pb-track-flash')
+    if (flash) {
+      flash.classList.remove('flash')
+      void flash.offsetWidth // reflow para reiniciar la animación
+      flash.classList.add('flash')
+    }
+  }
+  lastPbTrack = newTrack
 }
 
 function renderStationList() {

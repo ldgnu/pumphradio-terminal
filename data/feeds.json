@@ -1,50 +1,41 @@
 {
-  "_note": "Feeds de noticias para PumphRadio. Solo fuentes reales (sin dumps de releases pirata). Priorizamos español. Agregar/quitar feed = editar aqui. genres: a que estaciones aplica. priority: peso. enabled: true requiere feed vivo.",
+  "_note": "Feeds de noticias para PumphRadio. Pools disjuntos por genero: hardcore NO comparte feed con hardstyle. enabled:true requiere feed vivo (ya verificados con curl). priority: peso. lang: idioma original.",
   "feeds": [
     {
       "name": "Hard News",
       "url": "https://hardnews.nl/feed/",
-      "genres": ["hardcore", "hardstyle"],
+      "genres": ["hardcore"],
       "priority": 3,
       "enabled": true,
-      "lang": "en",
+      "lang": "nl",
       "source": "Hard News"
     },
     {
-      "name": "Tecnologiadj",
-      "url": "https://www.tecnologiadj.com/feed/",
-      "genres": ["electronic", "nujazz", "deep-techno"],
+      "name": "Intents Festival",
+      "url": "https://www.intentsfestival.nl/feed/",
+      "genres": ["hardcore"],
       "priority": 3,
       "enabled": true,
-      "lang": "es",
-      "source": "Tecnologiadj"
+      "lang": "nl",
+      "source": "Intents Festival"
     },
     {
-      "name": "FutureMusic España",
-      "url": "https://feeds.feedburner.com/FutureMusic-ComputerMusic-Spain",
-      "genres": ["electronic", "nujazz", "deep-techno"],
-      "priority": 2,
-      "enabled": true,
-      "lang": "es",
-      "source": "FutureMusic ES"
-    },
-    {
-      "name": "Mixmag",
-      "url": "https://mixmag.net/rss.xml",
-      "genres": ["nujazz", "deep-techno", "electronic"],
+      "name": "The Raw Style",
+      "url": "https://therawstyle.wordpress.com/feed/",
+      "genres": ["hardcore"],
       "priority": 2,
       "enabled": true,
       "lang": "en",
-      "source": "Mixmag"
+      "source": "The Raw Style"
     },
     {
-      "name": "Dancing Astronaut",
-      "url": "https://dancingastronaut.com/feed/",
-      "genres": ["deep-techno", "electronic", "nujazz"],
-      "priority": 2,
+      "name": "Hardstyle Mag",
+      "url": "https://hardstylemag.com/feed/",
+      "genres": ["hardstyle"],
+      "priority": 3,
       "enabled": true,
       "lang": "en",
-      "source": "Dancing Astronaut"
+      "source": "Hardstyle Mag"
     }
   ]
 }

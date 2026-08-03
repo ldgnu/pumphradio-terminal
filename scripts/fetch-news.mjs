@@ -17,7 +17,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const feeds = JSON.parse(readFileSync(join(ROOT, 'data/feeds.json'), 'utf8')).feeds
 
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36'
-const MAX_ITEMS = 12
+const MAX_ITEMS = 25
 
 async function fetchFeed(feed) {
   const ctrl = new AbortController()
@@ -62,7 +62,7 @@ function parseItemsRegex(xml, feed) {
     items.push({
       title,
       link: link.trim(),
-      summary: desc.slice(0, 600),
+      summary: desc.slice(0, 4000),
       date: dateRaw,
       source: feed.name,
       lang: feed.lang || '',
@@ -96,7 +96,7 @@ async function main() {
   console.log('PumphRadio · fetch-news')
   const perFeed = await Promise.all(feeds.filter(f => f.enabled).map(fetchFeed))
   const all = dedupe(perFeed.flat())
-  const sorted = sortByDate(all).slice(0, 40)
+  const sorted = sortByDate(all).slice(0, 80)
 
   const out = {
     generated: new Date().toISOString(),
