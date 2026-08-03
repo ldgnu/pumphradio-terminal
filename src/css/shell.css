@@ -200,6 +200,7 @@ html, body {
   font-size: 12px;
   opacity: 0;
   animation: news-in 0.4s ease forwards;
+  cursor: pointer;
 }
 .news-item:hover { background: var(--bg-raise); border-left-color: var(--accent); }
 .ni-time { color: var(--dim); font-size: 11px; width: 38px; flex-shrink: 0; font-family: var(--font); }
@@ -230,6 +231,65 @@ html, body {
   color: var(--dim);
 }
 .status-item:first-child { color: var(--signal); }
+
+/* --- News pane (tmux split) --- */
+.pane-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 50;
+}
+.news-pane {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, 92vw);
+  background: var(--bg);
+  border-left: 1px solid var(--accent);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.22s ease;
+  box-shadow: -8px 0 24px rgba(0,0,0,0.5);
+}
+.news-pane.open { transform: translateX(0); }
+.pane-title {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+.pane-body { flex: 1; overflow-y: auto; padding: 16px 14px; }
+.pane-source { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.pane-title-text { font-size: 17px; line-height: 1.3; margin: 6px 0 8px; color: var(--fg); }
+.pane-meta { font-size: 11px; margin-bottom: 14px; }
+.pane-summary { font-size: 13px; line-height: 1.6; color: var(--fg); white-space: pre-wrap; }
+.pane-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.pane-open { color: var(--accent); text-decoration: none; font-size: 12px; }
+.pane-open:hover { text-decoration: underline; }
+.pane-close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.pane-close:hover { border-color: var(--error); color: var(--error); }
+.cmd-line.dimmed { opacity: 0.4; pointer-events: none; }
 
 /* --- Command line --- */
 .cmd-line {

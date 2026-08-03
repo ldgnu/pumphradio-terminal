@@ -129,6 +129,22 @@
       <span class="cursor">▌</span>
     </div>
 
+    <!-- News pane (tmux-style split) -->
+    <aside id="news-pane" class="news-pane" aria-hidden="true">
+      <div class="pane-title">▍ ARTICLE</div>
+      <div class="pane-body">
+        <div id="pane-source" class="pane-source dim"></div>
+        <h3 id="pane-title" class="pane-title-text"></h3>
+        <div id="pane-meta" class="pane-meta dim"></div>
+        <div id="pane-summary" class="pane-summary"></div>
+      </div>
+      <div class="pane-foot">
+        <a id="pane-open" class="pane-open" href="#" target="_blank" rel="noopener noreferrer">abrir original ↗</a>
+        <button id="pane-close" class="pane-close">✕ cerrar</button>
+      </div>
+    </aside>
+    <div id="pane-scrim" class="pane-scrim" hidden></div>
+
   </div>
 
 </body>

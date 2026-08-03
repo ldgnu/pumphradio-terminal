@@ -10,7 +10,7 @@ import { audio } from './engine/audio.js'
 import { initShell } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
 import { initCommand, openCommand } from './ui/command.js'
-import { initNews } from './news/engine.js'
+import { initNews, initPaneControls } from './news/engine.js'
 import { Visualizer } from './visualizer/index.js'
 import { getState as gs } from './store.js'
 
@@ -22,6 +22,7 @@ function init() {
   initShell()
   initCommand()
   initNews()
+  initPaneControls()
   initPlayerBar()
   initVisualizer()
 

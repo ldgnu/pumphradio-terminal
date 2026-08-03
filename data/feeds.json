@@ -1,5 +1,5 @@
 {
-  "_note": "Feeds de noticias para PumphRadio. Fuente: suscripciones del FreshRSS de Javi. Agregar/quitar feed = editar aqui. genres: a que estaciones aplica. priority: peso en la mezcla. enabled: true requiere feed vivo.",
+  "_note": "Feeds de noticias para PumphRadio. Solo fuentes reales (sin dumps de releases pirata). Priorizamos español. Agregar/quitar feed = editar aqui. genres: a que estaciones aplica. priority: peso. enabled: true requiere feed vivo.",
   "feeds": [
     {
       "name": "Hard News",
@@ -7,31 +7,26 @@
       "genres": ["hardcore", "hardstyle"],
       "priority": 3,
       "enabled": true,
-      "source": "FreshRSS · hardnews.nl"
+      "lang": "en",
+      "source": "Hard News"
     },
     {
-      "name": "Hardstyle-Releases",
-      "url": "https://www.hardstyle-releases.com/feed/",
-      "genres": ["hardstyle"],
-      "priority": 2,
+      "name": "Tecnologiadj",
+      "url": "https://www.tecnologiadj.com/feed/",
+      "genres": ["electronic", "nujazz", "deep-techno"],
+      "priority": 3,
       "enabled": true,
-      "source": "FreshRSS · hardstyle-releases.com"
+      "lang": "es",
+      "source": "Tecnologiadj"
     },
     {
-      "name": "1gabba",
-      "url": "https://1gabba.pw/taxonomy/term/1/all/feed",
-      "genres": ["hardcore"],
+      "name": "FutureMusic España",
+      "url": "https://feeds.feedburner.com/FutureMusic-ComputerMusic-Spain",
+      "genres": ["electronic", "nujazz", "deep-techno"],
       "priority": 2,
       "enabled": true,
-      "source": "FreshRSS · 1gabba.pw"
-    },
-    {
-      "name": "Gabber.od.ua",
-      "url": "https://gabber.od.ua/rss.xml?action=article",
-      "genres": ["hardcore"],
-      "priority": 2,
-      "enabled": true,
-      "source": "FreshRSS · gabber.od.ua"
+      "lang": "es",
+      "source": "FutureMusic ES"
     },
     {
       "name": "Mixmag",
@@ -39,15 +34,8 @@
       "genres": ["nujazz", "deep-techno", "electronic"],
       "priority": 2,
       "enabled": true,
-      "source": "FreshRSS · mixmag.net"
-    },
-    {
-      "name": "EARMILK",
-      "url": "https://earmilk.com/feed/",
-      "genres": ["nujazz", "electronic"],
-      "priority": 1,
-      "enabled": true,
-      "source": "FreshRSS · earmilk.com"
+      "lang": "en",
+      "source": "Mixmag"
     }
   ]
 }

@@ -62,9 +62,10 @@ function parseItemsRegex(xml, feed) {
     items.push({
       title,
       link: link.trim(),
-      summary: desc.slice(0, 220),
+      summary: desc.slice(0, 600),
       date: dateRaw,
       source: feed.name,
+      lang: feed.lang || '',
       genres: feed.genres,
     })
   }

@@ -56,16 +56,66 @@ export function renderForStation(station) {
     return
   }
   wrap.innerHTML = items.map((it, i) => `
-    <a class="news-item" href="${escapeAttr(it.link)}" target="_blank" rel="noopener noreferrer">
+    <div class="news-item" data-idx="${i}">
       <span class="ni-time">${fmtDate(it.date)}</span>
       <span class="ni-title">${escapeHtml(cleanTitle(it.title))}</span>
       <span class="ni-src dim">${escapeHtml(it.source)}</span>
-    </a>
+    </div>
   `).join('')
-  // stagger fade-in
+
+  // click → abrir pane tmux con el artículo
   wrap.querySelectorAll('.news-item').forEach((el, i) => {
     el.style.animationDelay = (i * 0.03) + 's'
+    el.addEventListener('click', () => openPane(items[i]))
   })
+}
+
+function openPane(item) {
+  const pane = $('#news-pane')
+  const scrim = $('#pane-scrim')
+  if (!pane) return
+  setTextEl('#pane-source', item.source)
+  setTextEl('#pane-title', cleanTitle(item.title))
+  const langLabel = item.lang === 'es' ? 'ES' : 'EN'
+  setTextEl('#pane-meta', `${fmtFullDate(item.date)} · ${langLabel} · ${escapeHtml(item.genres?.[0] || '')}`)
+  setTextEl('#pane-summary', stripHtml(item.summary || '(sin resumen)'))
+  const open = $('#pane-open')
+  if (open) open.href = item.link || '#'
+  pane.classList.add('open')
+  pane.setAttribute('aria-hidden', 'false')
+  if (scrim) scrim.hidden = false
+  document.getElementById('cmd-line')?.classList.add('dimmed')
+}
+
+function closePane() {
+  const pane = $('#news-pane')
+  const scrim = $('#pane-scrim')
+  if (pane) pane.classList.remove('open')
+  if (scrim) scrim.hidden = true
+  document.getElementById('cmd-line')?.classList.remove('dimmed')
+}
+
+export function initPaneControls() {
+  const close = $('#pane-close')
+  const scrim = $('#pane-scrim')
+  const open = $('#pane-open')
+  if (close) close.addEventListener('click', closePane)
+  if (scrim) scrim.addEventListener('click', closePane)
+  if (open) open.addEventListener('click', () => { /* deja que abra en otra pestaña */ })
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePane()
+  })
+}
+
+function setTextEl(sel, text) {
+  const el = document.querySelector(sel)
+  if (el) el.textContent = text
+}
+
+function stripHtml(s) {
+  const d = document.createElement('div')
+  d.innerHTML = s
+  return d.textContent
 }
 
 function fmtDate(d) {
@@ -78,6 +128,14 @@ function fmtDate(d) {
   const mm = String(dt.getMinutes()).padStart(2, '0')
   if (dt.toDateString() === now.toDateString()) return hh + ':' + mm
   return (dt.getMonth() + 1) + '/' + dt.getDate()
+}
+
+function fmtFullDate(d) {
+  if (!d) return ''
+  const ts = Date.parse(d)
+  if (isNaN(ts)) return ''
+  const dt = new Date(ts)
+  return dt.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function escapeHtml(s) {
