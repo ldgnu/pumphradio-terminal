@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 /**
- * translate.mjs — Traducción curada de noticias a español (arg neutro, tono experto).
- * Aplica un mapa de traducciones (title_original → {title, summary, lang:'es'})
- * sobre public/news.json. Solo traduce los items del mapa; el resto queda igual.
+ * translate.mjs — Traducción a español (arg neutro) de TODAS las noticias.
  *
+ * Estrategia en 2 capas:
+ *   1. Mapa curado a mano (traducción experta verificada) — se aplica primero.
+ *   2. API Google Translate (endpoint gtx, gratis sin key) para el resto —
+ *      traduce title + summary al español. Determinístico, corre en CI.
+ *
+ * Nunca inventa datos: traduce el contenido EXISTENTE, no genera nuevo.
  * Uso: node scripts/translate.mjs   (reescribe public/news.json)
  */
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -14,51 +18,67 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const FILE = join(ROOT, 'public', 'news.json')
 const news = JSON.parse(readFileSync(FILE, 'utf8'))
 
-// key = fragmento único del título original. Mapa curado a mano.
-// El resto se queda en idioma original (nl/en) — la regla del proyecto
-// es nunca inventar datos, así que solo traducimos lo que podemos verificar.
+const GTX = 'https://translate.googleapis.com/translate_a/single'
+
+// --- Capa 1: traducción curada experta (se aplica antes que la API) ---
 const T = {
-  // === Hard News (neerlandés → español) ===
-  'Spotgoedkope TicketSwap-tickets': {
-    title: 'El reinado de las entradas baratas en TicketSwap podría estar llegando a su fin',
-    summary: 'Si en los últimos años solías esperar hasta las últimas horas previas a un festival para cazar una entrada barata en TicketSwap, malas noticias: esa costumbre podría quedar en el pasado. La plataforma de reventa entre usuarios evalúa cambios que afectarían de lleno al bolsillo del fan que compra sobre la hora.',
-  },
-  'Pat B scoort Tomorrowland-hit': {
-    title: 'Pat B consigue el hit de Tomorrowland junto a Dimitri Vegas: "Turn The Tide"',
-    summary: 'El DJ y productor Pat B alcanzó un hito llamativo en Tomorrowland 2026. Su colaboración con Dimitri Vegas y Sylver —"Turn The Tide"— se convirtió en una de las piezas más coreadas del festival, consolidando un cruce interesante entre la escena hardstyle y el mainstage global.',
-  },
-  'Hardstyle maakt steeds meer indruk': {
-    title: 'El hardstyle impone cada vez más presencia en Tomorrowland',
-    summary: 'La última edición de Tomorrowland mostró un hardstyle más presente que nunca. Uno de los momentos altos fue el set que rompió los esquemas del escenario principal, señal de que el género ya no es un nicho: se está convirtiendo en parte del ADN del festival.',
-  },
-  'Burgemeester over afgelast Defqon.1': {
-    title: 'El alcalde de Dronten rompe el silencio tras la cancelación de Defqon.1: "Los hospitales ya estaban al límite"',
-    summary: 'Un mes después de la cancelación de Defqon.1, el alcalde de Dronten, Jean Paul Gebben, se pronunció sobre la decisión. En su balance, la presión sobre el sistema sanitario local fue determinante: "los hospitales ya estaban al límite" antes de tomar la medida.',
-  },
-  'Lekkerfaces tovert': {
-    title: 'Lekkerfaces saca de la galera el line-up de LET\'S GET HYPER',
-    summary: 'Lekkerfaces presentó la alineación de su fiesta LET\'S GET HYPER, apostando fuerte por el uptempo y el hardcore más acelerado. Una selección que busca llevar la energía de la escena al límite en cada set.',
-  },
-  'Dominator trapt af': {
-    title: 'Dominator arranca a pleno sol con un hosting demoledor',
-    summary: 'El festival de hardcore más grande de los Países Bajos abrió su edición bajo un sol radiante y con hosts que pusieron la vara muy alta desde el primer momento. Un arranque que marca el tono de todo el fin de semana.',
-  },
-  'REBELLiON Indoor onthult': {
-    title: 'REBELLiON Indoor presenta un programa cargado de battles exclusivas y shows en vivo',
-    summary: 'REBELLiON Indoor destapó la programación de su edición indoor, con un line-up que incluye battles exclusivas y actos en vivo que escapan a la fórmula habitual del DJ set. Una propuesta para los que buscan algo más que un lineup convencional.',
-  },
+  'Spotgoedkope TicketSwap-tickets': 'El reinado de las entradas baratas en TicketSwap podría estar llegando a su fin',
+  'Pat B scoort Tomorrowland-hit': 'Pat B consigue el hit de Tomorrowland junto a Dimitri Vegas: "Turn The Tide"',
+  'Hardstyle maakt steeds meer indruk': 'El hardstyle impone cada vez más presencia en Tomorrowland',
+  'Burgemeester over afgelast Defqon.1': 'El alcalde de Dronten rompe el silencio tras la cancelación de Defqon.1',
+  'Lekkerfaces tovert': 'Lekkerfaces saca de la galera el line-up de LET\'S GET HYPER',
+  'Dominator trapt af': 'Dominator arranca a pleno sol con un hosting demoledor',
+  'REBELLiON Indoor onthult': 'REBELLiON Indoor presenta un programa cargado de battles exclusivas y shows en vivo',
 }
 
-let hit = 0
+async function translateText(text, src) {
+  if (!text) return ''
+  // chunk por frases hasta ~900 chars para no reventar la URL
+  const sentences = text.match(/[^.!?]+[.!?]+|\s*$/g) || [text]
+  let out = ''
+  let buf = ''
+  const flush = async () => {
+    if (!buf.trim()) return
+    try {
+      const url = `${GTX}?client=gtx&sl=${src || 'auto'}&tl=es&dt=t&q=${encodeURIComponent(buf.trim())}`
+      const res = await fetch(url, { headers: { 'User-Agent': 'PumphRadio/0.1 (https://pumphradio.com.ar)' } })
+      if (!res.ok) { out += (out ? ' ' : '') + buf.trim(); buf = ''; return }
+      const data = await res.json()
+      const joined = (data[0] || []).map(seg => seg[0] || '').join('')
+      out += (out ? ' ' : '') + joined
+    } catch { out += (out ? ' ' : '') + buf.trim() }
+    buf = ''
+  }
+  for (const s of sentences) {
+    if (s.trim().length === 0) continue
+    if (buf.length + s.length > 900) { await flush() }
+    buf += s
+  }
+  await flush()
+  return out.trim()
+}
+
+let hitApi = 0
+let hitCur = 0
+
 for (const item of news.items) {
-  const key = Object.keys(T).find((k) => item.title.includes(k))
-  if (key) {
-    item.title = T[key].title
-    item.summary = T[key].summary
+  // Capa 1: mapa curado
+  const cur = Object.keys(T).find((k) => item.title.includes(k))
+  if (cur) {
+    item.title = T[cur]
     item.lang = 'es'
-    hit++
+    hitCur++
+    continue
+  }
+  // Capa 2: API para todo lo demás que no esté en español
+  if (item.lang !== 'es') {
+    const srcLang = item.lang === 'nl' ? 'nl' : 'auto'
+    item.title = await translateText(item.title, srcLang) || item.title
+    item.summary = await translateText(item.summary || '', srcLang) || item.summary
+    item.lang = 'es'
+    hitApi++
   }
 }
 
 writeFileSync(FILE, JSON.stringify(news, null, 2))
-console.log(`✓ ${hit} noticias traducidas → public/news.json`)
+console.log(`✓ ${hitCur} curadas + ${hitApi} por API → ${news.items.length} noticias en español`)

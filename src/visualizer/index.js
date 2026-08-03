@@ -16,6 +16,13 @@ import { audio } from '../engine/audio.js'
 
 const MODES = ['spectrum', 'oscilloscope', 'waveform', 'ascii', 'bars']
 
+// Suma de energía del array de frecuencias (Uint8Array). ~0 = analizador muerto/plano.
+function energy(freq) {
+  let sum = 0
+  for (let i = 0; i < freq.length; i++) sum += freq[i]
+  return sum
+}
+
 export class Visualizer {
   constructor(canvas, labelEl) {
     this.canvas = canvas
@@ -54,12 +61,16 @@ export class Visualizer {
   }
 
   // Datos: reales del analizador o simulados.
+  // Si el analyser existe pero devuelve datos PLANOS (ej. AudioContext
+  // suspendido en iOS, o stream sin señal), cae a simulación para que el
+  // visualizador siempre se mueva. iOS: el contexto arranca suspended y sin
+  // resume no llega audio real al AnalyserNode → detectamos energía ~0.
   data() {
     const an = audio.getAnalyser && audio.getAnalyser()
     if (an && getState().playing) {
       const f = an.readFrequency()
       const w = an.readWaveform()
-      if (f && w) return { real: true, freq: f, wave: w }
+      if (f && w && energy(f) > 4) return { real: true, freq: f, wave: w }
     }
     return { real: false, freq: this.simFreq(), wave: this.simWave() }
   }

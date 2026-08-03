@@ -25,6 +25,7 @@ html, body {
   height: 100vh;
   height: 100dvh; /* iOS: evita desborde por la barra del browser */
   padding: 0 16px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px));
   position: relative;
 }
 .app.visible { display: flex; }
@@ -189,6 +190,7 @@ html, body {
 .pb-fav { position: relative; }
 .pb-mini { min-width: 28px; font-size: 15px; }
 .pb-icon-play, .pb-icon-pause { width: 20px; height: 20px; }
+.pb-ico { width: 18px; height: 18px; display: block; }
 .pb-icon-play.hidden, .pb-icon-pause.hidden { display: none; }
 .pb-vol-wrap { display: flex; align-items: center; gap: 4px; margin-left: 6px; }
 .pb-vol { color: var(--dim); font-size: 12px; min-width: 38px; text-align: right; }
@@ -300,6 +302,49 @@ html, body {
 .news-empty { padding: 8px; font-size: 12px; }
 @keyframes news-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
+/* --- Estilos de noticias por género (distintos entre estaciones) --- */
+/* Deep Techno: frío, violeta, calmado */
+.news[data-station="deep-techno"] .section-title { color: #bb9af7; }
+.news[data-station="deep-techno"] .news-item {
+  border-left-color: rgba(187,154,247,0.5);
+  padding-left: 12px;
+}
+.news[data-station="deep-techno"] .news-item:hover { border-left-color: #bb9af7; }
+.news[data-station="deep-techno"] .news-item:hover .ni-title { color: #bb9af7; }
+.news[data-station="deep-techno"] .ni-tag { color: #bb9af7; border-color: rgba(187,154,247,0.4); }
+
+/* Nujazz: verde frío, relajado */
+.news[data-station="nujazz"] .section-title { color: #9ece6a; }
+.news[data-station="nujazz"] .news-item {
+  border-left-color: rgba(158,206,106,0.5);
+  padding-left: 12px;
+}
+.news[data-station="nujazz"] .news-item:hover { border-left-color: #9ece6a; }
+.news[data-station="nujazz"] .news-item:hover .ni-title { color: #9ece6a; }
+.news[data-station="nujazz"] .ni-tag { color: #9ece6a; border-color: rgba(158,206,106,0.4); }
+
+/* Hardstyle: azul eléctrico */
+.news[data-station="hardstyle"] .section-title { color: #7aa2f7; }
+.news[data-station="hardstyle"] .news-item {
+  border-left-color: rgba(122,162,247,0.5);
+  padding-left: 12px;
+}
+.news[data-station="hardstyle"] .news-item:hover { border-left-color: #7aa2f7; }
+.news[data-station="hardstyle"] .news-item:hover .ni-title { color: #7aa2f7; }
+.news[data-station="hardstyle"] .ni-tag { color: #7aa2f7; border-color: rgba(122,162,247,0.4); }
+
+/* Hardcore: rojo agresivo, títulos más pesados */
+.news[data-station="hardcore"] .section-title { color: #ff5f56; letter-spacing: 0.12em; }
+.news[data-station="hardcore"] .news-item {
+  border-left-color: rgba(255,95,86,0.6);
+  border-left-width: 3px;
+  padding-left: 12px;
+}
+.news[data-station="hardcore"] .news-item:hover { border-left-color: #ff5f56; }
+.news[data-station="hardcore"] .news-item:hover .ni-title { color: #ff5f56; }
+.news[data-station="hardcore"] .ni-title { font-weight: 700; }
+.news[data-station="hardcore"] .ni-tag { color: #ff5f56; border-color: rgba(255,95,86,0.5); }
+
 /* --- cmd log (feedback de comandos) --- */
 .cmd-log {
   min-height: 18px;
@@ -319,6 +364,7 @@ html, body {
   letter-spacing: 0.05em;
   flex-shrink: 0;
   color: var(--dim);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .status-item:first-child { color: var(--signal); }
 
@@ -391,6 +437,7 @@ html, body {
   font-size: 13px;
   flex-shrink: 0;
   cursor: text;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .cmd-line:not(.open) .cmd-input {
   width: 0;

@@ -58,6 +58,12 @@ function decodeEntities(s) {
 export function renderForStation(station) {
   const wrap = $('#news-list')
   if (!wrap) return
+  // Estilo distinto por género: deep techno/nujazz ≠ hardstyle/hardcore
+  const newsSec = wrap.closest('.news')
+  if (newsSec) {
+    newsSec.dataset.station = station?.id || ''
+    newsSec.dataset.genre = station?.subgenres?.[0] || station?.genres?.[0] || ''
+  }
   const items = itemsForStation(station).slice(0, 8)
   if (!items.length) {
     wrap.innerHTML = '<div class="news-empty dim">— no signal —</div>'

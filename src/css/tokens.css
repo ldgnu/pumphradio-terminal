@@ -1,107 +1,103 @@
 /* ============================================================
    PUMPHRADIO — DESIGN TOKENS
-   Terminal underground. Color con significado, pocos tonos.
-   Un tema por bloque [data-theme]. :root = default (One Dark).
-   Cambiar data-theme en <html> re-skinnea TODO el sitio
-   (fondo, texto, bordes, acento, warnings, signal, visualizer).
+   Fondo SIEMPRE negro en todos los themes. Lo que cambia por theme:
+   acentos, texto, bordes, highlights (botones, elementos activos).
+   Cada theme tiene una paleta de acento DISTINTA y reconocible.
+   Cambiar data-theme en <html> re-skinnea acentos y highlights,
+   manteniendo el fondo negro constante.
    ============================================================ */
 :root {
-  /* base — One Dark (Atom), default */
-  --bg:        #282c34;
-  --bg-raise:  #2f343d;
+  /* --- One Dark (Atom) — default. Acento AZUL. --- */
+  --bg:        #000000;
+  --bg-raise:  #0c0d10;
   --fg:        #abb2bf;
-  --dim:       #5c6370;
+  --dim:       #565b64;
   --accent:    #61afef;
   --warning:   #e5c07b;
   --error:     #e06c75;
   --signal:    #98c379;
-  --border:    #3e4451;
+  --border:    #2b3139;
 
-  /* tipografía */
   --font: 'JetBrains Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
-
-  /* layout */
   --topbar-h: 44px;
   --statusbar-h: 30px;
   --cmd-h: 34px;
-
-  /* cursor */
   --cursor-visible: '▌';
 }
 
-/* --- Dracula --- */
+/* --- Dracula — acento PÚRPURA, texto brillante --- */
 [data-theme="dracula"] {
-  --bg:        #282a36;
-  --bg-raise:  #313341;
+  --bg:        #000000;
+  --bg-raise:  #11111a;
   --fg:        #f8f8f2;
-  --dim:       #6272a4;
+  --dim:       #5d5f78;
   --accent:    #bd93f9;
   --warning:   #f1fa8c;
   --error:     #ff5555;
   --signal:    #50fa7b;
-  --border:    #44475a;
+  --border:    #33334a;
 }
 
-/* --- Nord --- */
+/* --- Nord — acento FROST CIAN, texto frío --- */
 [data-theme="nord"] {
-  --bg:        #2e3440;
-  --bg-raise:  #3b4252;
+  --bg:        #000000;
+  --bg-raise:  #0d1117;
   --fg:        #d8dee9;
-  --dim:       #4c566a;
+  --dim:       #4a5058;
   --accent:    #88c0d0;
   --warning:   #ebcb8b;
   --error:     #bf616a;
   --signal:    #a3be8c;
-  --border:    #434c5e;
+  --border:    #2f3b45;
 }
 
-/* --- Gruvbox (dark) --- */
+/* --- Gruvbox — acento AMARILLO CÁLIDO, texto crema --- */
 [data-theme="gruvbox"] {
-  --bg:        #282828;
-  --bg-raise:  #3c3836;
+  --bg:        #000000;
+  --bg-raise:  #141210;
   --fg:        #ebdbb2;
-  --dim:       #928374;
+  --dim:       #6e6352;
   --accent:    #fabd2f;
   --warning:   #fe8019;
   --error:     #fb4934;
   --signal:    #b8bb26;
-  --border:    #504945;
+  --border:    #3a342c;
 }
 
-/* --- Tokyo Night --- */
+/* --- Tokyo Night — acento AZUL-VIOLETA, texto índigo --- */
 [data-theme="tokyo-night"] {
-  --bg:        #1a1b26;
-  --bg-raise:  #24283b;
+  --bg:        #000000;
+  --bg-raise:  #0e1220;
   --fg:        #a9b1d6;
-  --dim:       #565f89;
+  --dim:       #4c5270;
   --accent:    #7aa2f7;
   --warning:   #e0af68;
   --error:     #f7768e;
   --signal:    #9ece6a;
-  --border:    #414868;
+  --border:    #2a3150;
 }
 
-/* --- TTY Linux (consola clásica: negro, texto blanco/gris, prompt verde ambar) --- */
+/* --- TTY Linux — acento VERDE (clásico console), ámbar warnings --- */
 [data-theme="tty-linux"] {
   --bg:        #000000;
   --bg-raise:  #0a0a0a;
   --fg:        #c0c0c0;
   --dim:       #606060;
-  --accent:    #00ff00;     /* verde prompt, igual que el shell clásico */
-  --warning:   #ffb000;     /* ámbar de los enlaces / focus */
+  --accent:    #00ff00;
+  --warning:   #ffb000;
   --error:     #ff3030;
   --signal:    #00ff00;
   --border:    #303030;
 }
 
-/* --- Matrix (verde sobre negro, tipografía mono, glow) --- */
+/* --- Matrix — todo VERDE MATRIX sobre negro --- */
 [data-theme="matrix"] {
   --bg:        #000000;
   --bg-raise:  #050805;
   --fg:        #00ff41;
   --dim:       #1f7a2c;
   --accent:    #00ff41;
-  --warning:   #b6ff00;     /* verde-amarillo para los warnings */
+  --warning:   #b6ff00;
   --error:     #ff0040;
   --signal:    #00ff41;
   --border:    #0d3d14;

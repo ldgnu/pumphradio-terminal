@@ -94,10 +94,10 @@ export async function enrich(artist, track) {
     } catch { /* ignore */ }
   }
 
-  // 3) Wikipedia: bio + imagen del artista (título exacto, fallback sin paréntesis)
+  // 3) Wikipedia: bio + imagen del artista. Prefiere ESPAÑOL, fallback inglés.
   if (artist) {
     const wikiTitle = encodeURIComponent(artist.trim())
-    for (const lang of ['en', 'es']) {
+    for (const lang of ['es', 'en']) {
       try {
         const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${wikiTitle}`)
         if (!r.ok) continue
