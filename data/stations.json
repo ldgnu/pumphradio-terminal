@@ -9,14 +9,14 @@
       "tagline": "hypnotic · dub · atmospheric · minimal",
       "genres": ["Deep Techno", "Hypnotic Techno", "Dub Techno", "Atmospheric Techno", "Minimal Techno"],
       "subgenres": ["deep", "hypnotic", "dub", "minimal", "atmospheric"],
-      "streamUrl": "",
-      "metadataUrl": "",
-      "metaType": "none",
+      "streamUrl": "https://stream.zeno.fm/fpfejm9r55vuv",
+      "metadataUrl": "https://api.zeno.fm/mounts/metadata/subscribe/fpfejm9r55vuv",
+      "metaType": "zeno-sse",
       "accent": "#bb9af7",
       "node": "DT-04",
       "bpmHint": 128,
       "scene": ["detroit", "berlin", "birmingham"],
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "nujazz",
