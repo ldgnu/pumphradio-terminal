@@ -1,0 +1,27 @@
+/* ============================================================
+   PUMPHRADIO — DESIGN TOKENS
+   Terminal underground. Color con significado, pocos tonos.
+   ============================================================ */
+:root {
+  /* base */
+  --bg:        #0a0a0c;
+  --bg-raise:  #101014;
+  --fg:        #c8c8c8;
+  --dim:       #5a5a60;
+  --accent:    #ff5f56;   /* estación hardcore (seed). Por estación via JS. */
+  --warning:   #ffb454;
+  --error:     #ff5f56;
+  --signal:    #5fd7af;
+  --border:    #232329;
+
+  /* tipografía */
+  --font: 'JetBrains Mono', ui-monospace, 'IBM Plex Mono', Menlo, monospace;
+
+  /* layout */
+  --topbar-h: 44px;
+  --statusbar-h: 30px;
+  --cmd-h: 34px;
+
+  /* cursor */
+  --cursor-visible: '▌';
+}

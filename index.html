@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es-AR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <title>PumphRadio — underground frequencies</title>
+  <meta name="description" content="PumphRadio — experimental underground radio. Hardcore, hardstyle, nujazz, deep techno. Broadcasting from nowhere.">
+
+  <meta property="og:title" content="PumphRadio — underground frequencies">
+  <meta property="og:description" content="Experimental underground radio terminal. Broadcasting from nowhere.">
+  <meta property="og:type" content="website">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+
+  <!-- BOOT SEQUENCE -->
+  <div id="boot" class="boot">
+    <div class="boot-title">PUMPH RADIO SYSTEM</div>
+    <div class="boot-sep">────────────────────────</div>
+    <div id="boot-body" class="boot-body"></div>
+    <div class="boot-hint dim">click to skip</div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-name">PUMPHRADIO</span>
+        <span class="brand-sub dim">underground frequencies</span>
+      </div>
+      <div class="top-right">
+        <span class="dim" id="node">---</span>
+        <span class="dim" id="clock">--:--:-- UTC</span>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <!-- NOW TRANSMITTING panel -->
+      <section class="now-panel">
+        <div class="panel-title">┌─ NOW TRANSMITTING ──────────────────────</div>
+        <div class="np-grid">
+          <div class="np-left">
+            <div class="np-row"><span class="np-key">ARTIST</span> <span class="np-val" id="np-artist">—</span></div>
+            <div class="np-row"><span class="np-key">TRACK</span> <span class="np-val" id="np-track">—</span></div>
+            <div class="np-row"><span class="np-key">RELEASE</span> <span class="np-val dim" id="np-release">—</span></div>
+            <div class="np-row"><span class="np-key">LABEL</span> <span class="np-val dim" id="np-label">—</span></div>
+            <div class="np-row"><span class="np-key">YEAR</span> <span class="np-val dim" id="np-year">—</span></div>
+          </div>
+          <div class="np-right">
+            <div class="np-row"><span class="np-key">NODE</span> <span class="np-val" id="np-node">—</span></div>
+            <div class="np-row"><span class="np-key">STATION</span> <span class="np-val" id="np-station">—</span></div>
+            <div class="np-row"><span class="np-key">GENRE</span> <span class="np-val" id="np-genre">—</span></div>
+            <div class="np-row"><span class="np-key">FREQ</span> <span class="np-val" id="np-freq">—</span></div>
+            <div class="np-row"><span class="np-key">ELAPSED</span> <span class="np-val" id="elapsed">00:00</span></div>
+          </div>
+        </div>
+        <div class="panel-foot">└──────────────────────────────────────────</div>
+      </section>
+
+      <!-- Visualizer (PHASE 4) -->
+      <section class="viz" id="viz">
+        <div class="viz-placeholder dim">[ VISUALIZER — PHASE 4 ]</div>
+      </section>
+
+      <!-- Stations -->
+      <section class="stations">
+        <div class="section-title">FREQUENCIES</div>
+        <div id="stations-list" class="stations-list"></div>
+      </section>
+
+      <div id="cmd-log" class="cmd-log"></div>
+    </main>
+
+    <!-- Footer / status + command line -->
+    <footer class="statusbar">
+      <span id="status-play" class="status-item">STANDBY</span>
+      <span id="status-buffer" class="status-item dim">BUFFER --%</span>
+      <span id="status-vol" class="status-item dim">VOL 80%</span>
+      <span class="status-item dim">/ cmd · 1-4 station · SPACE play · V viz · I info</span>
+    </footer>
+
+    <!-- Command line -->
+    <div id="cmd-line" class="cmd-line">
+      <span class="prompt">pumphradio &gt;</span>
+      <input id="cmd-input" class="cmd-input" autocomplete="off" spellcheck="false" aria-label="comando">
+      <span class="cursor">▌</span>
+    </div>
+
+  </div>
+
+</body>
+</html>

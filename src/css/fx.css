@@ -1,0 +1,82 @@
+/* ============================================================
+   PUMPHRADIO — FX (boot, scanlines, cursor, glitch sutil)
+   ============================================================ */
+
+/* --- Boot overlay --- */
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  gap: 6px;
+  transition: opacity 0.25s ease;
+  cursor: pointer;
+}
+.boot.hide { opacity: 0; }
+.boot-title { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; }
+.boot-sep { color: var(--dim); font-size: 12px; }
+.boot-body { min-height: 100px; font-size: 13px; }
+.boot-line { display: flex; gap: 10px; }
+.boot-label { color: var(--fg); }
+.boot-status { color: var(--signal); }
+.boot-ready { color: var(--fg); margin-top: 10px; }
+.boot-hint { position: absolute; bottom: 24px; font-size: 11px; }
+
+/* --- Scanlines sutiles --- */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.015) 0px,
+    rgba(255,255,255,0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* --- Cursor block para elementos con .tty-cursor --- */
+.tty-cursor::after {
+  content: var(--cursor-visible);
+  color: var(--accent);
+  animation: blink 1s steps(1) infinite;
+}
+
+/* --- Glitch sutil (solo en hover de brand) --- */
+.brand-name {
+  position: relative;
+  display: inline-block;
+}
+.brand-name::before,
+.brand-name::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.brand:hover .brand-name::before {
+  opacity: 0.5;
+  color: var(--accent);
+  animation: glitch-1 0.35s steps(2) infinite;
+}
+.brand:hover .brand-name::after {
+  opacity: 0.4;
+  color: var(--signal);
+  animation: glitch-2 0.3s steps(2) infinite;
+}
+@keyframes glitch-1 { 0%{transform:translate(0,0)} 25%{transform:translate(-1px,1px)} 50%{transform:translate(1px,-1px)} 75%{transform:translate(-1px,-1px)} 100%{transform:translate(1px,1px)} }
+@keyframes glitch-2 { 0%{transform:translate(0,0)} 25%{transform:translate(1px,1px)} 50%{transform:translate(-1px,-1px)} 75%{transform:translate(1px,-1px)} 100%{transform:translate(-1px,1px)} }
+
+/* --- Reducción de movimiento --- */
+@media (prefers-reduced-motion: reduce) {
+  .cursor, .tty-cursor::after, .st-live { animation: none !important; }
+}
