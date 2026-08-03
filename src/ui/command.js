@@ -119,7 +119,7 @@ function run(cmd) {
       break
     }
     case 'whoami':
-      log('> root@pumphradio:~$ underground listener · node ' + (getState().station?.node || '---'))
+      log('> root@pump!station:~$ underground listener · node ' + (getState().station?.node || '---'))
       break
     case 'time':
       log('> ' + new Date().toISOString().slice(11, 19) + ' UTC')

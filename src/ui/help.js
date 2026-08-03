@@ -26,7 +26,7 @@ export function openHelp() {
         </div>
       </div>
       <div class="ov-section">
-        <div class="ov-h">COMMANDS — pumphradio &gt; <span class="ov-cmd">cmd</span></div>
+        <div class="ov-h">COMMANDS — pump!station &gt; <span class="ov-cmd">cmd</span></div>
         <div class="ov-grid">
           ${cmd('play / pause / next')}
           ${cmd('station &lt;id|num&gt;', 'switch station')}
@@ -43,7 +43,7 @@ export function openHelp() {
           ${cmd('help / quit')}
         </div>
       </div>
-      <div class="ov-foot dim">PUMPHRADIO v0.2 · underground frequencies · broadcasting from nowhere</div>
+      <div class="ov-foot dim">PUMP! STATION v0.2 · underground frequencies · broadcasting from nowhere</div>
     `
   )
   openOverlay()

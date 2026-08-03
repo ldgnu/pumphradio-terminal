@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0a0c">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="PumphRadio">
+  <meta name="apple-mobile-web-app-title" content="Pump! Station">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- PWA -->
@@ -15,10 +15,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
 
-  <title>PumphRadio — underground frequencies</title>
-  <meta name="description" content="PumphRadio — experimental underground radio. Hardcore, hardstyle, nujazz, deep techno. Broadcasting from nowhere.">
+  <title>Pump! Station — underground frequencies</title>
+  <meta name="description" content="Pump! Station — experimental underground radio. Hardcore, hardstyle, nujazz, deep techno. Broadcasting from nowhere.">
 
-  <meta property="og:title" content="PumphRadio — underground frequencies">
+  <meta property="og:title" content="Pump! Station — underground frequencies">
   <meta property="og:description" content="Experimental underground radio terminal. Broadcasting from nowhere.">
   <meta property="og:type" content="website">
 
@@ -45,8 +45,19 @@
     <!-- Header -->
     <header class="topbar">
       <div class="brand">
-        <span class="brand-name">PUMPHRADIO</span>
-        <span class="brand-sub dim">underground frequencies</span>
+        <pre class="brand-logo" aria-label="PUMP!"> █████░ █    █ █▒  ▒█ █████░   █
+ █   ▓█ █    █ ██  ██ █   ▓█   █
+ █    █ █    █ ██░░██ █    █   █
+ █   ▓█ █    █ █▒▓▓▒█ █   ▓█   █
+ █████░ █    █ █ ██ █ █████░   █
+ █      █    █ █ █▓ █ █        █
+ █      █    █ █    █ █
+ █      █▒  ▒█ █    █ █        █
+ █       ████  █    █ █        █</pre>
+        <div class="brand-text">
+          <span class="brand-name">STATION</span>
+          <span class="brand-sub dim">underground frequencies</span>
+        </div>
       </div>
       <div class="top-right">
         <button id="btn-help" class="top-help" title="Ayuda / atajos (?)" aria-label="Ayuda">?</button>
@@ -158,7 +169,7 @@
 
       <!-- Command line -->
       <div id="cmd-line" class="cmd-line">
-        <span class="prompt">pumphradio &gt;</span>
+        <span class="prompt">pump!station &gt;</span>
         <input id="cmd-input" class="cmd-input" autocomplete="off" spellcheck="false" aria-label="comando">
         <span class="cursor">▌</span>
       </div>
@@ -193,7 +204,7 @@
     <!-- Ambient fullscreen now-playing (reusa #viz-canvas via CSS) -->
     <section class="ambient-layer" id="ambient-layer" aria-hidden="true">
       <div class="am-top">
-        <span class="am-brand">PUMPHRADIO</span>
+        <span class="am-brand">PUMP! STATION</span>
         <span class="am-station dim" id="am-station">—</span>
         <span class="am-actions">
           <button id="am-play" class="am-btn" aria-label="play/pause">▶</button>

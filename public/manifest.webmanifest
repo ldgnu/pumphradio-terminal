@@ -1,6 +1,6 @@
 {
-  "name": "PumphRadio",
-  "short_name": "PumphRadio",
+  "name": "Pump! Station",
+  "short_name": "Pump! Station",
   "description": "Experimental underground radio terminal. Broadcasting from nowhere.",
   "start_url": ".",
   "scope": ".",
