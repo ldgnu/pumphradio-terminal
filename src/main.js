@@ -26,6 +26,7 @@ function init() {
   initPlayerBar()
   initThemeSwitcher()
   initVisualizer()
+  initIosUnlock()
 
   // Cargar estación inicial (la primera habilitada)
   const first = STATIONS.find(s => s.enabled)
@@ -139,6 +140,20 @@ function logMode() {
     const l = document.getElementById('cmd-log')
     if (l) { l.textContent = '> visualizer: ' + viz.mode.toUpperCase() }
   }
+}
+
+// iOS Safari: el AudioContext arranca suspended y el primer play() del boot
+// (sin gesto) es bloqueado. Un "unlock" resume el contexto en el primer
+// toque/click — requisito para que el visualizador reciba audio real en iPhone.
+function initIosUnlock() {
+  function unlock() {
+    const br = audio.bridge
+    if (br && br.ctx && br.ctx.state === 'suspended') br.ctx.resume().catch(() => {})
+    document.removeEventListener('touchend', unlock)
+    document.removeEventListener('click', unlock)
+  }
+  document.addEventListener('touchend', unlock)
+  document.addEventListener('click', unlock)
 }
 
 function initThemeSwitcher() {
