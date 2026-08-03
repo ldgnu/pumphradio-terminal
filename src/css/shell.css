@@ -593,6 +593,7 @@ body.ambient .ambient-layer { display: flex; }
   letter-spacing: 0.1em;
 }
 .am-brand { color: var(--accent); font-weight: 700; text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent); }
+.am-theme { font-size: 10px; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; }
 .am-actions { display: flex; gap: 10px; pointer-events: auto; }
 .am-btn {
   background: none;

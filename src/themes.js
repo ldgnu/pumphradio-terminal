@@ -26,6 +26,9 @@ export function setTheme(id) {
   try { localStorage.setItem('pumphradio-theme', id) } catch {}
   const btn = document.getElementById('btn-theme')
   if (btn) btn.textContent = labelFor(id)
+  // el indicador del modo ambient refleja el theme en vivo
+  const am = document.getElementById('am-theme')
+  if (am) am.textContent = 'THEME: ' + labelFor(id)
   return id
 }
 

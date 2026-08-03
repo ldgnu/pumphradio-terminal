@@ -5,6 +5,7 @@
  */
 import { getState, on } from '../store.js'
 import { audio } from '../engine/audio.js'
+import { currentTheme, labelFor } from '../themes.js'
 import { openOverlay, closeOverlay } from './overlay.js'
 
 export function initAmbient() {
@@ -40,10 +41,12 @@ function render() {
   const stationEl = document.getElementById('am-station')
   const coverEl = document.getElementById('am-cover-img')
   const coverWrap = document.getElementById('am-cover')
+  const themeEl = document.getElementById('am-theme')
 
   if (artistEl) artistEl.textContent = st.now.artist || '—'
   if (trackEl) trackEl.textContent = st.now.display || st.now.track || '— NO SIGNAL —'
   if (stationEl) stationEl.textContent = `${st.station?.name || '—'} · ${st.station?.freq || ''} FM`
+  if (themeEl) themeEl.textContent = 'THEME: ' + labelFor(currentTheme())
   if (coverWrap) coverWrap.hidden = !st.now.coverUrl
   if (coverEl && st.now.coverUrl && coverEl.src !== st.now.coverUrl) coverEl.src = st.now.coverUrl
 }
