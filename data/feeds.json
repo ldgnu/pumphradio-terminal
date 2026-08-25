@@ -15,18 +15,20 @@
       "url": "https://www.intentsfestival.nl/feed/",
       "genres": ["hardcore"],
       "priority": 3,
-      "enabled": true,
+      "enabled": false,
       "lang": "nl",
-      "source": "Intents Festival"
+      "source": "Intents Festival",
+      "_note": "feed sin posts nuevos desde 2025-05 — deshabilitado 2026-08"
     },
     {
       "name": "The Raw Style",
       "url": "https://therawstyle.wordpress.com/feed/",
       "genres": ["hardcore"],
       "priority": 2,
-      "enabled": true,
+      "enabled": false,
       "lang": "en",
-      "source": "The Raw Style"
+      "source": "The Raw Style",
+      "_note": "feed muerto desde 2013 — deshabilitado 2026-08"
     },
     {
       "name": "Hardstyle Mag",
@@ -36,6 +38,33 @@
       "enabled": true,
       "lang": "en",
       "source": "Hardstyle Mag"
+    },
+    {
+      "name": "Masters of Hardcore",
+      "url": "https://www.mastersofhardcore.com/feed/",
+      "genres": ["hardcore"],
+      "priority": 3,
+      "enabled": true,
+      "lang": "en",
+      "source": "Masters of Hardcore"
+    },
+    {
+      "name": "DJ Mag",
+      "url": "https://djmag.com/rss.xml",
+      "genres": ["deep", "hardstyle"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "DJ Mag"
+    },
+    {
+      "name": "We Rave You",
+      "url": "https://weraveyou.com/feed/",
+      "genres": ["deep", "hardstyle"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "We Rave You"
     }
   ]
 }

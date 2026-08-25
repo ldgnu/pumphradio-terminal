@@ -63,7 +63,7 @@ function parseItemsRegex(xml, feed) {
       title,
       link: link.trim(),
       summary: desc.slice(0, 4000),
-      date: dateRaw,
+      date: normalizeDate(dateRaw),
       source: feed.name,
       lang: feed.lang || '',
       genres: feed.genres,
@@ -73,6 +73,21 @@ function parseItemsRegex(xml, feed) {
 }
 
 function stripTags(s) { return s.replace(/<[^>]*>/g, ' ') }
+
+// Node/V8 no parsea abreviaturas de timezone tipo "BST"/"CEST" en Date.parse
+// (caso real: djmag.com). Las normalizamos a offset numérico antes de guardar.
+const TZ_OFFSETS = {
+  BST: '+0100', CEST: '+0200', EET: '+0200', IST: '+0530',
+  EDT: '-0400', EST: '-0500', CDT: '-0500', CST: '-0600',
+  MDT: '-0600', MST: '-0700', PDT: '-0700', PST: '-0800',
+  AEDT: '+1100', AEST: '+1000', JST: '+0900', KST: '+0900',
+}
+function normalizeDate(s) {
+  const raw = String(s || '').trim()
+  return raw.replace(/\b([A-Z]{2,4})\b$/, (m) =>
+    TZ_OFFSETS[m] ? `${TZ_OFFSETS[m]}` : m
+  ).replace(/(\d{2}:\d{2}:\d{2}) ([+-]\d{4})$/, '$1 $2')
+}
 
 function dedupe(items) {
   const seen = new Set()
@@ -94,8 +109,28 @@ function sortByDate(items) {
 
 async function main() {
   console.log('PumphRadio · fetch-news')
-  const perFeed = await Promise.all(feeds.filter(f => f.enabled).map(fetchFeed))
-  const all = dedupe(perFeed.flat())
+  const enabled = feeds.filter((f) => f.enabled)
+  const perFeed = await Promise.all(enabled.map(fetchFeed))
+
+  // Filtro anti-noticias-viejas: fuera todo lo que tenga >14 días o fecha
+  // inválida/vacía (feeds muertos tipo wordpress abandonado ya no pudren el listado).
+  const MAX_AGE_MS = 14 * 24 * 3600 * 1000
+  const now = Date.now()
+  const fresh = (it) => {
+    const ts = Date.parse(it.date)
+    if (!it.date || Number.isNaN(ts)) return false
+    return now - ts <= MAX_AGE_MS
+  }
+
+  // Log por feed: cuántas traen y cuántas sobreviven al filtro (debug de feeds muertos).
+  enabled.forEach((f, i) => {
+    const got = perFeed[i]
+    const kept = got.filter(fresh)
+    const flag = kept.length === 0 ? ' ⚠ SIN NOTICIAS RECIENTES' : ''
+    console.log(`  · ${f.name}: ${got.length} items, ${kept.length} frescos${flag}`)
+  })
+
+  const all = dedupe(perFeed.flat().filter(fresh))
   const sorted = sortByDate(all).slice(0, 80)
 
   const out = {
@@ -107,6 +142,9 @@ async function main() {
   mkdirSync(dirname(file), { recursive: true })
   writeFileSync(file, JSON.stringify(out, null, 2))
   console.log(`  ✓ ${sorted.length} noticias únicas → public/news.json`)
+  if (!sorted.length) {
+    console.warn('  ⚠ 0 noticias frescas — revisar data/feeds.json (feeds caídos?)')
+  }
 }
 
 main().catch((e) => { console.error('fetch-news error:', e); process.exit(1) })

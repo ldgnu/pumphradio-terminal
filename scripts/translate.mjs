@@ -74,9 +74,77 @@ async function translateText(text, src) {
   return ok ? out.trim() : ''
 }
 
+// --- Capa 3: FreeLLMAPI (gateway OpenAI-compatible) -------------------------
+// El endpoint gtx de Google bloquea IPs de datacenter con captcha "Sorry...".
+// Fallback: batches de items al gateway (modelo auto) que devuelve JSON
+// traducido. Se activa sola si gtx falla para algún item.
+const LLM_BASE = process.env.LLM_BASE_URL || ''
+const LLM_KEY = process.env.LLM_API_KEY || ''
+
+async function llmTranslateBatch(items, srcLang) {
+  if (!LLM_BASE || !LLM_KEY || !items.length) return null
+  const payload = items.map((it, i) => ({ i, title: it.title, summary: (it.summary || '').slice(0, 1200) }))
+  const body = {
+    model: 'auto',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Sos un traductor al español rioplatense neutro especializado en música electrónica (hardcore, gabber, hardstyle, techno). ' +
+          'Devolvés SOLO un array JSON válido, sin markdown ni texto extra, con la misma forma de entrada: [{"i":<int>,"title":"...","summary":"..."}]. ' +
+          'No agregues comentarios ni inventes datos: traducí exactamente lo que llega.',
+      },
+      { role: 'user', content: `Idioma origen: ${srcLang || 'auto'}. Traducí title y summary de cada item:\n${JSON.stringify(payload)}` },
+    ],
+    max_tokens: 4000,
+  }
+  for (let t = 1; t <= 3; t++) {
+    try {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 180000)
+      const res = await fetch(`${LLM_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${LLM_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: ctrl.signal,
+      })
+      clearTimeout(timer)
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      const data = await res.json()
+      const txt = data?.choices?.[0]?.message?.content || ''
+      // tolerar fences ```json ... ```
+      const clean = txt.replace(/^```(?:json)?/m, '').replace(/```\s*$/m, '').trim()
+      const start = clean.indexOf('[')
+      const end = clean.lastIndexOf(']')
+      if (start === -1 || end === -1) throw new Error('sin array JSON en respuesta')
+      const arr = JSON.parse(clean.slice(start, end + 1))
+      return arr
+    } catch (e) {
+      console.warn(`  [llm-batch] intento ${t} falló: ${e.message}`)
+      await sleep(2000 * t)
+    }
+  }
+  return null
+}
+
+// Devuelve true si tradujo (marca lang='es'), false si no pudo.
+async function translateItemViaLlm(item, srcLang) {
+  const arr = await llmTranslateBatch([item], srcLang)
+  const r = Array.isArray(arr) && arr.find((x) => x && x.i === 0)
+  if (r && r.title) {
+    item.title = String(r.title).trim()
+    if (r.summary) item.summary = String(r.summary).trim()
+    item.lang = 'es'
+    return true
+  }
+  return false
+}
+
 let hitApi = 0
 let hitCur = 0
+let hitLlm = 0
 let failed = 0
+const pending = [] // items que gtx no pudo → capa 3 (FreeLLMAPI)
 
 for (const item of news.items) {
   // Capa 1: mapa curado
@@ -87,7 +155,7 @@ for (const item of news.items) {
     hitCur++
     continue
   }
-  // Capa 2: API para todo lo demás que no esté en español
+  // Capa 2: API gtx para todo lo demás que no esté en español
   if (item.lang !== 'es') {
     const srcLang = item.lang === 'nl' ? 'nl' : 'auto'
     const newTitle = await translateText(item.title, srcLang)
@@ -98,12 +166,38 @@ for (const item of news.items) {
       item.lang = 'es'
       hitApi++
     } else {
-      // no se pudo traducir → se deja en idioma original (honesto, no miente lang)
-      failed++
+      // no se pudo con gtx (IP bloqueada / rate-limit) → cola para la capa 3
+      pending.push({ item, srcLang })
     }
   }
 }
 
+// Capa 3: FreeLLMAPI en batches de 5 (título + summary por item).
+if (pending.length) {
+  if (LLM_BASE && LLM_KEY) {
+    console.log(`· gtx falló para ${pending.length} items → traduciendo vía FreeLLMAPI (${Math.ceil(pending.length / 5)} batches)...`)
+    for (let i = 0; i < pending.length; i += 5) {
+      const chunk = pending.slice(i, i + 5)
+      const arr = await llmTranslateBatch(chunk.map((p) => p.item), chunk[0].srcLang)
+      if (Array.isArray(arr)) {
+        for (let j = 0; j < chunk.length; j++) {
+          const r = arr.find((x) => x && x.i === j)
+          if (r && r.title) {
+            chunk[j].item.title = String(r.title).trim()
+            if (r.summary) chunk[j].item.summary = String(r.summary).trim()
+            chunk[j].item.lang = 'es'
+            hitLlm++
+          } else failed++
+        }
+      } else {
+        chunk.forEach(() => failed++)
+      }
+    }
+  } else {
+    pending.forEach(() => failed++)
+  }
+}
+
 writeFileSync(FILE, JSON.stringify(news, null, 2))
-console.log(`✓ ${hitCur} curadas + ${hitApi} por API · ${failed} sin traducir → ${news.items.length} items`)
+console.log(`✓ ${hitCur} curadas + ${hitApi} gtx + ${hitLlm} freellm · ${failed} sin traducir → ${news.items.length} items`)
 if (failed > 0) process.exitCode = 2
