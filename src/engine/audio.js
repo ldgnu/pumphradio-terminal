@@ -68,7 +68,11 @@ class AudioEngine {
     this.audio.onpause = () => setPlaying(false)
     this.audio.onwaiting = () => setLoading(true)
     this.audio.onplaying = () => setLoading(false)
-    this.audio.onerror = () => setLoading(false)
+    // Sin reconexión el stream queda muerto para siempre en este modo.
+    this.audio.onerror = () => {
+      setLoading(false)
+      this.scheduleReconnect()
+    }
     if (src) { this.audio.load(); this.audio.play().catch(() => setLoading(false)) }
     console.warn('[audio] CORS fallback (sin analizador real)')
     that.bridge = null
