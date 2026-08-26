@@ -13,6 +13,7 @@
  */
 import { getState } from '../store.js'
 import { audio } from '../engine/audio.js'
+import { getAccent } from '../themes.js'
 
 const MODES = ['spectrum', 'oscilloscope', 'waveform', 'ascii', 'bars']
 
@@ -32,8 +33,10 @@ export class Visualizer {
     this.raf = null
     this.t = 0
     this.smooth = new Float32Array(128).fill(0.05)
+    // Referencia estable para poder remover el listener en destroy()
+    this._onResize = () => this.onResize()
     this.onResize()
-    window.addEventListener('resize', () => this.onResize())
+    window.addEventListener('resize', this._onResize)
   }
 
   onResize() {
@@ -55,9 +58,9 @@ export class Visualizer {
     return this.mode
   }
 
+  // Color --accent cacheado en themes.js (getComputedStyle cada frame = caro)
   accent() {
-    const cs = getComputedStyle(document.documentElement)
-    return cs.getPropertyValue('--accent').trim() || '#ff5f56'
+    return getAccent()
   }
 
   // Datos: reales del analizador o simulados.
@@ -214,6 +217,6 @@ export class Visualizer {
 
   destroy() {
     if (this.raf) cancelAnimationFrame(this.raf)
-    window.removeEventListener('resize', () => this.onResize())
+    window.removeEventListener('resize', this._onResize)
   }
 }

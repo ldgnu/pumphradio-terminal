@@ -17,6 +17,20 @@ export function currentTheme() {
   return document.documentElement.dataset.theme || 'one-dark'
 }
 
+// Cache del color --accent: el visualizador lo pide cada frame y
+// getComputedStyle() es caro a 60fps → se resuelve solo cuando cambia el theme.
+let _accent = { theme: null, value: '#ff5f56' }
+
+export function getAccent() {
+  const id = currentTheme()
+  if (_accent.theme !== id) {
+    _accent.value =
+      getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff5f56'
+    _accent.theme = id
+  }
+  return _accent.value
+}
+
 export function labelFor(id) {
   return (THEMES.find(t => t.id === id) || THEMES[0]).label
 }
