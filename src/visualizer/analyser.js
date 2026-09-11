@@ -3,7 +3,7 @@
  * Conecta el <audio> a un AnalyserNode real (requiere CORS en el stream).
  * Expone frecuencia y forma de onda para el visualizador.
  */
-const FFT = 256
+const FFT = 1024
 
 export class AnalyserBridge {
   constructor(audioElement) {
@@ -37,8 +37,8 @@ export class AnalyserBridge {
     this.analyser.connect(this.gain)
     this.gain.connect(this.ctx.destination)
 
-    this.freq = new Uint8Array(this.analyser.frequencyBinCount) // 128
-    this.wave = new Uint8Array(this.analyser.fftSize)           // 256
+    this.freq = new Uint8Array(this.analyser.frequencyBinCount) // 512 con FFT 1024
+    this.wave = new Uint8Array(this.analyser.fftSize)           // 1024
     this.ok = true
   }
 

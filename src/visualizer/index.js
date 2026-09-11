@@ -73,8 +73,17 @@ export class Visualizer {
     if (an && getState().playing) {
       const f = an.readFrequency()
       const w = an.readWaveform()
-      if (f && w && energy(f) > 4) return { real: true, freq: f, wave: w }
+      if (f && w && energy(f) > 4) {
+        this._simStreak = 0
+        this._realLast = true
+        return { real: true, freq: f, wave: w }
+      }
     }
+    // AudioContext suspendido (iOS autoplay/interrupción): intentar resume
+    // en vez de quedarse en simulado para siempre.
+    if (an && an.ctx && an.ctx.state !== 'running') an.ensureRunning()
+    this._simStreak = (this._simStreak || 0) + 1
+    this._realLast = false
     return { real: false, freq: this.simFreq(), wave: this.simWave() }
   }
 
@@ -119,6 +128,21 @@ export class Visualizer {
       case 'waveform': this.renderWaveform(ctx, accent); break
       case 'ascii': this.renderAscii(ctx, accent); break
       case 'bars': this.renderBars(ctx, accent); break
+    }
+
+    // Indicador LIVE/SIM en el label (cada ~1s, barato): distingue el análisis
+    // real de la simulación, así un visualizer "que sigue cualquier cosa" se ve al toque.
+    this._labelTick = (this._labelTick || 0) + 1
+    if (this._labelTick >= 60 && this.labelEl) {
+      this._labelTick = 0
+      const sim = !this._realLast
+      this.labelEl.textContent = this.mode.toUpperCase() + (sim ? ' · SIM' : ' · LIVE')
+      // Llevamos un rato en simulado pese a estar "sonando": probamos volver
+      // al modo con analizador (el fallback CORS puede haber sido un falso
+      // positivo transitorio del stream).
+      if (sim && getState().playing && this._simStreak > 300) {
+        if (audio.restoreCors && audio.restoreCors()) this._simStreak = 0
+      }
     }
 
     this.raf = requestAnimationFrame(() => this.loop())

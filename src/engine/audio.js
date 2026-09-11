@@ -78,6 +78,26 @@ class AudioEngine {
     that.bridge = null
   }
 
+  // Reintenta el modo con analizador: recrea el <audio> con crossOrigin y
+  // reconstruye el grafo Web Audio. Para recuparse de toFallback() cuando el
+  // stream vuelve a mandar CORS (p.ej. Zeno cambió de backend).
+  restoreCors() {
+    if (!this.corsFallback) return false
+    const src = this.audio.src
+    this.audio.pause()
+    this.audio = new Audio()
+    this.audio.preload = 'none'
+    this.audio.crossOrigin = 'anonymous'
+    this.audio.volume = getState().volume / 100
+    if (src) this.audio.src = src
+    this.bridge = new AnalyserBridge(this.audio)
+    this.corsFallback = false
+    this.bindEvents()
+    if (src) { this.audio.load(); this.audio.play().catch(() => setLoading(false)) }
+    console.info('[audio] CORS restaurado (analizador real de vuelta)')
+    return true
+  }
+
   loadStation(station) {
     if (!station?.streamUrl) return
     if (this.eventSource) { this.eventSource.close(); this.eventSource = null }
