@@ -75,18 +75,35 @@ export function initSession() {
     if (playing) { startedAt = Date.now(); return }
     if (startedAt) { totalSeconds += Math.floor((Date.now() - startedAt) / 1000); startedAt = null }
   })
-  // cada 5s suma el delta de la sesión activa
+  // cada 30s suma el delta de la sesion activa y persiste (antes: cada 5s
+  // escribia a localStorage sin necesidad — 17 writes/min solo por seguir sonando)
   setInterval(() => {
-    if (getState().playing) {
+    if (getState().playing && startedAt) {
       const now = Date.now()
-      if (startedAt) {
-        sessionSeconds += Math.floor((now - startedAt) / 1000)
-        totalSeconds += Math.floor((now - startedAt) / 1000)
+      const delta = Math.floor((now - startedAt) / 1000)
+      if (delta > 0) {
+        sessionSeconds += delta
+        totalSeconds += delta
         startedAt = now
         persistTime()
       }
     }
-  }, 5000)
+  }, 30000)
+
+  // Al cerrar/ocultar la pestana, guardar el delta pendiente para no perder uptime
+  function flushUptime() {
+    if (startedAt) {
+      const delta = Math.floor((Date.now() - startedAt) / 1000)
+      if (delta > 0) {
+        sessionSeconds += delta
+        totalSeconds += delta
+        startedAt = Date.now()
+        persistTime()
+      }
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushUptime() })
+  window.addEventListener('pagehide', flushUptime)
 }
 
 export function getHistory(n = 10) {
