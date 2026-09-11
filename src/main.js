@@ -116,6 +116,9 @@ function bindKeyboard() {
     const cmdInput = document.getElementById('cmd-input')
     if (document.activeElement === cmdInput) return
 
+    // no robar atajos del navegador/OS: Ctrl+F (find), Cmd+T (tab), Alt+Tab, etc.
+    if (e.metaKey || e.ctrlKey || e.altKey) return
+
     const key = e.key.toLowerCase()
     // Escape: cerrar overlays/ambient antes que nada
     if (e.key === 'Escape') {
