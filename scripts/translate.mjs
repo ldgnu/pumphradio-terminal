@@ -200,4 +200,7 @@ if (pending.length) {
 
 writeFileSync(FILE, JSON.stringify(news, null, 2))
 console.log(`✓ ${hitCur} curadas + ${hitApi} gtx + ${hitLlm} freellm · ${failed} sin traducir → ${news.items.length} items`)
-if (failed > 0) process.exitCode = 2
+// NO fallar el build por items sin traducir: en CI no hay key del gateway y
+// gtx bloquea IPs de GitHub. Un exit 2 mataba todo el deploy del sitio.
+// Se informa en el log y el deploy sigue con lo que haya.
+if (failed > 0) console.warn(`⚠ ${failed} items sin traducir (deploy sigue igual)`)
