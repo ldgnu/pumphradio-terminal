@@ -22,20 +22,20 @@
     {
       "id": "nujazz",
       "num": 2,
-      "name": "NUJAZZ",
-      "nickname": "Midnight in the Listening Room",
+      "name": "ROSE ROUGE",
+      "nickname": "St Germain",
       "freq": "90.8",
       "tagline": "acid jazz · broken beat · future jazz · jazztronica",
       "genres": ["Nu Jazz", "Acid Jazz", "Broken Beat", "Future Jazz", "Jazztronica", "Downtempo"],
       "subgenres": ["nujazz", "brokenbeat", "jazztronica", "downtempo"],
-      "streamUrl": "",
-      "metadataUrl": "",
-      "metaType": "none",
+      "streamUrl": "https://stream.zeno.fm/s3ag9f75buqvv",
+      "metadataUrl": "https://api.zeno.fm/mounts/metadata/subscribe/s3ag9f75buqvv",
+      "metaType": "zeno-sse",
       "accent": "#9ece6a",
       "node": "NJ-03",
       "bpmHint": 100,
       "scene": ["london", "berlin", "tokyo"],
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "hardstyle",
