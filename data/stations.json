@@ -4,8 +4,8 @@
     {
       "id": "deep-techno",
       "num": 1,
-      "name": "DEEP TECHNO",
-      "nickname": "Frequency Below",
+      "name": "FREQUENCIES BELOW",
+      "nickname": "deep · hypnotic · below",
       "freq": "92.4",
       "tagline": "hypnotic · dub · atmospheric · minimal",
       "genres": ["Deep Techno", "Hypnotic Techno", "Dub Techno", "Atmospheric Techno", "Minimal Techno"],
@@ -40,8 +40,8 @@
     {
       "id": "hardstyle",
       "num": 3,
-      "name": "HARDSTYLE",
-      "nickname": "Reverse Bass Cathedral",
+      "name": "REVERSE BASS",
+      "nickname": "raw · euphoric · cathedral",
       "freq": "89.4",
       "tagline": "early · raw · euphoric · reverse bass",
       "genres": ["Hardstyle", "Early Hardstyle", "Rawstyle", "Raw Hardstyle", "Euphoric Hardstyle", "Reverse Bass"],
@@ -58,8 +58,8 @@
     {
       "id": "hardcore",
       "num": 4,
-      "name": "HARDCORE",
-      "nickname": "No Speed Limit",
+      "name": "I LOVE HARDCORE!",
+      "nickname": "gabber · rotterdam · no limits",
       "freq": "88.1",
       "tagline": "gabber · industrial · frenchcore · uptempo",
       "genres": ["Hardcore", "Gabber", "Industrial Hardcore", "Frenchcore", "Millennium Hardcore", "Early Hardcore", "Uptempo"],

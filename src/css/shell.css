@@ -205,7 +205,7 @@ html, body {
 .pb-vol-wrap { display: flex; align-items: center; gap: 4px; margin-left: 6px; }
 .pb-vol { color: var(--dim); font-size: 12px; min-width: 38px; text-align: right; }
 .pb-track { font-size: 12px; flex: 1; min-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pb-station { font-size: 11px; color: var(--accent); }
+.pb-station { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
 
 /* --- Visualizer --- */
 .viz {
@@ -269,8 +269,8 @@ html, body {
 }
 .station-row.disabled { opacity: 0.35; cursor: default; }
 .st-num { color: var(--dim); width: 28px; }
-.st-name { font-weight: 500; width: 120px; }
-.st-tag { color: var(--dim); font-size: 12px; flex: 1; }
+.st-name { font-weight: 700; width: 140px; letter-spacing: 0.02em; }
+.st-tag { color: var(--dim); font-size: 10px; flex: 1; letter-spacing: 0.03em; }
 .st-live { color: var(--signal); font-size: 10px; animation: pulse 1.6s infinite; }
 @keyframes pulse { 0%,100% {opacity:1} 50% {opacity:0.3} }
 
