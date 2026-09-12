@@ -47,7 +47,7 @@ function render() {
   if (trackEl) trackEl.textContent = st.now.display || st.now.track || '— NO SIGNAL —'
   if (stationEl) stationEl.textContent = `${st.station?.name || '—'} · ${st.station?.freq || ''} FM`
   if (themeEl) themeEl.textContent = 'THEME: ' + labelFor(currentTheme())
-  if (coverWrap) coverWrap.hidden = !st.now.coverUrl
+  if (coverWrap) coverWrap.hidden = !st.now.coverUrl || (coverEl.complete && coverEl.naturalWidth === 0)
   if (coverEl && st.now.coverUrl && coverEl.src !== st.now.coverUrl) coverEl.src = st.now.coverUrl
 }
 

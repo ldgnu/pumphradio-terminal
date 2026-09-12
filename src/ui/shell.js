@@ -62,12 +62,16 @@ export function renderNow() {
   setText('#np-year', st.now.year || '—')
 
   // Cover (Cover Art Archive). Solo mostrar cuando llega.
+  // Si la imagen falla (404 de CAA), ocultamos el cover en vez de dejar el ícono roto.
   const cover = $('#np-cover')
   const coverImg = $('#np-cover-img')
   if (cover && coverImg) {
     if (st.now.coverUrl) {
-      cover.hidden = false
-      if (coverImg.src !== st.now.coverUrl) coverImg.src = st.now.coverUrl
+      if (coverImg.src !== st.now.coverUrl) {
+        coverImg.src = st.now.coverUrl
+      }
+      // Mostrar solo si ya cargó bien o está cargando; onerror la vuelve a ocultar.
+      if (!coverImg.complete || coverImg.naturalWidth > 0) cover.hidden = false
     } else {
       cover.hidden = true
     }
