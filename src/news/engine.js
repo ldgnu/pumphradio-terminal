@@ -93,7 +93,7 @@ function openPane(item) {
   setTextEl('#pane-source', item.source)
   setTextEl('#pane-title', cleanTitle(item.title))
   const langLabel = item.lang === 'es' ? 'ES' : 'EN'
-  setTextEl('#pane-meta', `${fmtFullDate(item.date)} · ${langLabel} · ${escapeHtml(item.genres?.[0] || '')}`)
+  setTextEl('#pane-meta', `${fmtFullDate(item.date)} · ${langLabel} · ${item.genres?.[0] || ''}`)
   setTextEl('#pane-summary', stripHtml(item.summary || '(sin resumen)'))
   const open = $('#pane-open')
   if (open) open.href = item.link || '#'
@@ -106,7 +106,10 @@ function openPane(item) {
 function closePane() {
   const pane = $('#news-pane')
   const scrim = $('#pane-scrim')
-  if (pane) pane.classList.remove('open')
+  if (pane) {
+    pane.classList.remove('open')
+    pane.setAttribute('aria-hidden', 'true')
+  }
   if (scrim) scrim.hidden = true
   document.getElementById('cmd-line')?.classList.remove('dimmed')
 }
@@ -129,9 +132,8 @@ function setTextEl(sel, text) {
 }
 
 function stripHtml(s) {
-  const d = document.createElement('div')
-  d.innerHTML = s
-  return d.textContent
+  // Sin innerHTML con contenido remoto (riesgo XSS): remover tags con regex + decodificar entidades
+  return decodeEntities(String(s).replace(/<[^>]*>/g, '')).trim()
 }
 
 function fmtDate(d) {
