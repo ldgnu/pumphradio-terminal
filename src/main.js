@@ -127,6 +127,11 @@ function bindKeyboard() {
       return
     }
 
+    // Con un overlay abierto (ayuda/historial/favoritos), no interceptar el
+    // resto de los atajos: cambiar tema/estación "a ciegas" detrás de la
+    // ventana confunde. Escape ya la cerró arriba.
+    if (isOverlayOpen()) return
+
     switch (key) {
       case '/':
         e.preventDefault()
