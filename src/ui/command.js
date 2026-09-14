@@ -62,7 +62,8 @@ function log(txt) {
 }
 
 function run(cmd) {
-  const [c, ...args] = cmd.split(/\s+/)
+  // aceptar comandos con o sin "/" inicial (/stations ≡ stations)
+  const [c, ...args] = cmd.replace(/^\//, '').trim().split(/\s+/)
   const a = args.join(' ').toLowerCase()
 
   switch (c) {

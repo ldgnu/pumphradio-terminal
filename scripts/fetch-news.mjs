@@ -72,7 +72,9 @@ function parseItemsRegex(xml, feed) {
   return items
 }
 
-function stripTags(s) { return s.replace(/<[^>]*>/g, ' ') }
+function stripTags(s) {
+  return s.replace(/<!\[CDATA\[|\]\]>/g, ' ').replace(/<[^>]*>/g, ' ')
+}
 
 // Node/V8 no parsea abreviaturas de timezone tipo "BST"/"CEST" en Date.parse
 // (caso real: djmag.com). Las normalizamos a offset numérico antes de guardar.

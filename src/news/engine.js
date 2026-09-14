@@ -133,7 +133,11 @@ function setTextEl(sel, text) {
 
 function stripHtml(s) {
   // Sin innerHTML con contenido remoto (riesgo XSS): remover tags con regex + decodificar entidades
-  return decodeEntities(String(s).replace(/<[^>]*>/g, '')).trim()
+  return decodeEntities(
+    String(s)
+      .replace(/<!\[CDATA\[|\]\]>/g, '') // artefactos CDATA de feeds (DJ Mag/WeRaveYou)
+      .replace(/<[^>]*>/g, '')
+  ).trim()
 }
 
 function fmtDate(d) {
