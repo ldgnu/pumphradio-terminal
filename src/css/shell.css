@@ -674,3 +674,39 @@ body.ambient .ambient-layer { display: flex; }
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
 }
 .fav-del:hover { border-color: var(--error); color: var(--error); }
+
+/* ---- Feedback táctil: press en botones, filas de estación, noticias y tabs ---- */
+button,
+.station-row,
+.news-item,
+.tbtn,
+.btn {
+  transition: transform 0.08s ease, opacity 0.08s ease,
+              border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+button:active,
+.station-row:active,
+.news-item:active,
+.tbtn:active,
+.btn:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+.station-row:active { transform: scale(0.985); }
+.news-item:active { transform: scale(0.98); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* Ripple terminal-style: destello de barrido en el press */
+@keyframes press-flash {
+  from { box-shadow: inset 0 0 0 100px color-mix(in srgb, var(--accent) 18%, transparent); }
+  to   { box-shadow: inset 0 0 0 100px transparent; }
+}
+button:active,
+.tbtn:active,
+.btn:active {
+  animation: press-flash 0.25s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active, .station-row:active, .news-item:active, .tbtn:active, .btn:active {
+    transform: none; animation: none;
+  }
+}

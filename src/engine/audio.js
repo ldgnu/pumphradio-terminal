@@ -105,6 +105,14 @@ class AudioEngine {
     this.reconnectAttempts = 0
     this.station = station
 
+    // Fast path: ya es la estación actual. Si suena, nada; si está pausada,
+    // solo play() (el buffer vivo sigue conectado → arranque inmediato).
+    if (this.audio.src === station.streamUrl) {
+      if (this.audio.paused) { this.play() } else { setLoading(false) }
+      this.connectMetadata(station)
+      return
+    }
+
     this.audio.src = station.streamUrl
     this.applyVolume(getState().volume)
     setLoading(true)
@@ -113,6 +121,18 @@ class AudioEngine {
     this.audio.play().catch(() => setLoading(false))
 
     this.connectMetadata(station)
+  }
+
+  // Precarga temprana: se llama en pointerdown del selector de estación
+  // (~100-300ms antes del click). load() bufferiza sin reproducir; cuando el
+  // click llega y llama a loadStation(), el stream ya está cargando → play seco.
+  prefetch(station) {
+    if (!station?.streamUrl) return
+    if (this.station?.id === station.id && this.audio.src) return
+    if (this._prefetchId === station.id && this.audio.src) return
+    this._prefetchId = station.id
+    this.audio.src = station.streamUrl
+    this.audio.load()
   }
 
   connectMetadata(station) {

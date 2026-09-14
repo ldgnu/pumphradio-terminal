@@ -117,9 +117,22 @@ export class Visualizer {
   }
 
   loop() {
+    const st = getState()
     this.t += 0.016
     const ctx = this.ctx
     ctx.clearRect(0, 0, this.w, this.h)
+    // Visualizador apagado si no hay reproducción: solo reacciona a la música.
+    if (!st.playing) {
+      this._wasOff = true
+      return
+    }
+    // Primera vuelta tras reanudar: animación de encendido suave.
+    if (this._wasOff) {
+      this._wasOff = false
+      this._power = 0
+    }
+    this._power = Math.min(1, (this._power || 0) + 0.04)
+    ctx.globalAlpha = this._power
     const accent = this.accent()
 
     switch (this.mode) {
@@ -129,6 +142,7 @@ export class Visualizer {
       case 'ascii': this.renderAscii(ctx, accent); break
       case 'bars': this.renderBars(ctx, accent); break
     }
+    ctx.globalAlpha = 1
 
     // Indicador LIVE/SIM en el label (cada ~1s, barato): distingue el análisis
     // real de la simulación, así un visualizer "que sigue cualquier cosa" se ve al toque.

@@ -198,6 +198,13 @@ function bindKeyboard() {
     const st = STATIONS.find(s => s.id === row.dataset.station)
     if (st) { setStation(st); audio.loadStation(st) }
   })
+  // Precarga en pointerdown: gana ~100-300ms (el buffer arranca antes del click)
+  document.getElementById('stations-list').addEventListener('pointerdown', (e) => {
+    const row = e.target.closest('.station-row')
+    if (!row || !row.classList.contains('enabled')) return
+    const st = STATIONS.find(s => s.id === row.dataset.station)
+    if (st) audio.prefetch(st)
+  })
 }
 
 function nextStation() {
