@@ -122,8 +122,11 @@ export class Visualizer {
     const ctx = this.ctx
     ctx.clearRect(0, 0, this.w, this.h)
     // Visualizador apagado si no hay reproducción: solo reacciona a la música.
+    // OJO: reprogramar el rAF ANTES del return — un return directo mata el
+    // loop para siempre (pausar → visualizer muerto aunque luego se reproduzca).
     if (!st.playing) {
       this._wasOff = true
+      this.raf = requestAnimationFrame(() => this.loop())
       return
     }
     // Primera vuelta tras reanudar: animación de encendido suave.
