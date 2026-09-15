@@ -7,8 +7,33 @@
 import { getState, on } from '../store.js'
 
 const NEWS_URL = import.meta.env.BASE_URL + 'news.json'
+const NEWS_FILTER_KEY = 'pumph.news.filter'
+const NEWS_FILTERS = [
+  { id: 'all', label: 'todos' },
+  { id: 'hardcore', label: 'hardcore' },
+  { id: 'hardstyle', label: 'hardstyle' },
+  { id: 'deep-techno', label: 'deep techno' },
+  { id: 'nujazz', label: 'nujazz' },
+]
 let allItems = []
 let loaded = false
+let manualFilter = loadFilter()
+
+function loadFilter() {
+  try {
+    const v = localStorage.getItem(NEWS_FILTER_KEY)
+    return NEWS_FILTERS.some((f) => f.id === v) ? v : 'auto'
+  } catch { return 'auto' }
+}
+function saveFilter(v) {
+  try { localStorage.setItem(NEWS_FILTER_KEY, v) } catch { /* noop */ }
+}
+function setFilter(v) {
+  manualFilter = v
+  saveFilter(v)
+  renderForStation(getState().station)
+  renderFilterChips()
+}
 
 function $(sel) { return document.querySelector(sel) }
 
@@ -27,9 +52,16 @@ export async function initNews() {
     allItems = []
   }
   renderForStation(getState().station)
+  renderFilterChips()
 }
 
 function itemsForStation(station) {
+  // Filtro manual de género (chips): tiene prioridad sobre la estación activa.
+  if (manualFilter && manualFilter !== 'auto') {
+    if (manualFilter === 'all') return allItems
+    const matched = allItems.filter((it) => (it.genres || []).some((g) => g.includes(manualFilter) || manualFilter.includes(g)))
+    return matched.length ? matched : allItems
+  }
   if (!station || !allItems.length) return allItems
   const genres = station.subgenres || station.genres || []
   const key = genres.join('|')
@@ -38,6 +70,23 @@ function itemsForStation(station) {
     (it.genres || []).some((g) => key.includes(g) || station.id.includes(g))
   )
   return matched.length ? matched : allItems
+}
+
+function renderFilterChips() {
+  const bar = $('#news-filter')
+  if (!bar) return
+  const counts = { all: allItems.length }
+  for (const f of NEWS_FILTERS) {
+    if (f.id === 'all') continue
+    counts[f.id] = allItems.filter((it) => (it.genres || []).some((g) => g.includes(f.id) || f.id.includes(g))).length
+  }
+  bar.innerHTML = NEWS_FILTERS.map((f) => {
+    const active = manualFilter === f.id
+    return `<button class="news-chip ${active ? 'active' : ''}" role="tab" aria-selected="${active}" data-filter="${f.id}" title="${f.label} (${counts[f.id] ?? 0})">${escapeHtml(f.label)}${counts[f.id] ? ` <span class="nf-count">${counts[f.id]}</span>` : ''}</button>`
+  }).join('') + '<button class="news-chip nf-auto ' + (manualFilter === 'auto' ? 'active' : '') + '" role="tab" aria-selected="' + (manualFilter === 'auto') + '" data-filter="auto" title="Seguir la estación activa">auto</button>'
+  bar.querySelectorAll('.news-chip').forEach((el) => {
+    el.addEventListener('click', () => setFilter(el.dataset.filter))
+  })
 }
 
 function cleanTitle(t) {
