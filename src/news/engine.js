@@ -145,7 +145,14 @@ function openPane(item) {
   setTextEl('#pane-meta', `${fmtFullDate(item.date)} · ${langLabel} · ${item.genres?.[0] || ''}`)
   setTextEl('#pane-summary', stripHtml(item.summary || '(sin resumen)'))
   const open = $('#pane-open')
-  if (open) open.href = item.link || '#'
+  if (open) {
+    if (item.link) {
+      open.href = item.link
+      open.hidden = false
+    } else {
+      open.hidden = true // sin link real, no ofrecer botón que abre '#'
+    }
+  }
   pane.classList.add('open')
   pane.setAttribute('aria-hidden', 'false')
   if (scrim) scrim.hidden = false
