@@ -41,11 +41,13 @@ function init() {
   const helpBtn = document.getElementById('btn-help')
   if (helpBtn) helpBtn.addEventListener('click', () => openHelp())
 
-  // Cargar estación inicial (la primera habilitada)
-  const first = STATIONS.find(s => s.enabled)
+  // Restaurar la estación elegida en la visita anterior; si no hay, la
+  // primera habilitada. Warm-up: bufferiza el stream SIN play (solo buffer).
+  const savedId = (() => { try { return localStorage.getItem('pumphradio_station') } catch { return null } })()
+  const first = (savedId && STATIONS.find(s => s.enabled && s.id === savedId)) || STATIONS.find(s => s.enabled)
   if (first) {
     setStation(first)
-    audio.loadStation(first)
+    audio.warm(first)
   }
 
   bindKeyboard()

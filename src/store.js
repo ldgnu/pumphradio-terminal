@@ -40,6 +40,8 @@ function emit(evt, payload) {
 
 export function setStation(station) {
   state.station = station
+  // Persistir para restaurar la estación elegida en la próxima visita
+  if (station?.id) { try { localStorage.setItem('pumphradio_station', station.id) } catch { /* ignore */ } }
   emit('station', station)
 }
 

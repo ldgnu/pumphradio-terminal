@@ -135,6 +135,20 @@ class AudioEngine {
     this.audio.load()
   }
 
+  // Warm-up al abrir la página: bufferiza el stream de la estación
+  // seleccionada SIN play() (autoplay está bloqueado sin gesto de todos
+  // modos). Conecta metadata para que "now playing" ya esté al tocar play.
+  // Con audio.src ya puesto, loadStation() cae en el fast path → play seco.
+  warm(station) {
+    if (!station?.streamUrl) return
+    if (this.station?.id === station.id && this.audio.src) return
+    this.station = station
+    this._prefetchId = station.id
+    this.audio.src = station.streamUrl
+    this.audio.load()
+    this.connectMetadata(station)
+  }
+
   connectMetadata(station) {
     if (station.metaType === 'zeno-sse' && station.metadataUrl) {
       try {
