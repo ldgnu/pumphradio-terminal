@@ -40,6 +40,14 @@ export function initBoot(onDone) {
 
   overlay.addEventListener('click', () => finish())
 
+  // Salto con tecla (bug QA 17/sep: solo respondía al click)
+  const onKey = (e) => {
+    // no robar atajos con modificadores (Ctrl/Cmd/Meta/Alt)
+    if (e.ctrlKey || e.metaKey || e.altKey) return
+    if (!e.repeat) finish()
+  }
+  document.addEventListener('keydown', onKey)
+
   const body = overlay.querySelector('#boot-body')
   const sep = overlay.querySelector('.boot-sep')
   if (sep) sep.style.display = 'none'
@@ -119,6 +127,7 @@ export function initBoot(onDone) {
   function finish() {
     if (finished.done) return
     finished.done = true
+    document.removeEventListener('keydown', onKey)
     overlay.classList.add('hide')
     setTimeout(() => {
       overlay.remove()
