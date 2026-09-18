@@ -1,0 +1,15 @@
+{
+  "_note": "Noticias manuales curadas por QWERTY/Javi. Se mergean SIEMPRE arriba del feed en fetch-news.mjs. Formato igual a items del feed. No borrar sin avisar.",
+  "items": [
+    {
+      "title": "La escena hardcore mundial tembló: Angerfist y Mad Dog lanzan DOGFIST",
+      "summary": "Dos leyendas del hardcore, Angerfist y Mad Dog, arrancaron un proyecto conjunto bajo el nombre DOGFIST. La agencia de bookings Most Wanted DJ ya abrió la agenda para sus sets en pareja. Dos mastodontes que llevan más de veinte años formando la industria ahora van a partir pisos juntos: el debut será el 19 de septiembre en el mítico club Fabrik, en España. Un colaborativo histórico, sí o sí para tener en el radar.",
+      "date": "Wed, 09 Sep 2026 12:00:00 +0000",
+      "source": "Pump! Station",
+      "lang": "es",
+      "genres": ["hardcore"],
+      "link": "https://www.mostwanteddj.com/",
+      "manual": true
+    }
+  ]
+}

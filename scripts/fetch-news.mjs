@@ -114,6 +114,13 @@ async function main() {
   const enabled = feeds.filter((f) => f.enabled)
   const perFeed = await Promise.all(enabled.map(fetchFeed))
 
+  // Noticias manuales curadas (data/manual-news.json): se mergean SIEMPRE arriba.
+  let manual = []
+  try {
+    manual = JSON.parse(readFileSync(join(ROOT, 'data', 'manual-news.json'), 'utf8')).items || []
+    if (manual.length) console.log(`  · ${manual.length} noticia(s) manual(es) incluida(s)`)
+  } catch { /* sin manuales, OK */ }
+
   // Filtro anti-noticias-viejas: fuera todo lo que tenga >14 días o fecha
   // inválida/vacía (feeds muertos tipo wordpress abandonado ya no pudren el listado).
   const MAX_AGE_MS = 14 * 24 * 3600 * 1000
@@ -132,13 +139,17 @@ async function main() {
     console.log(`  · ${f.name}: ${got.length} items, ${kept.length} frescos${flag}`)
   })
 
-  const all = dedupe(perFeed.flat().filter(fresh))
+  const all = dedupe([...manual, ...perFeed.flat().filter(fresh)])
   const sorted = sortByDate(all).slice(0, 80)
+  // Las manuales curadas van fijas al tope (pinned), el resto por fecha.
+  const manualKeys = new Set(manual.map((it) => (it.title + it.link).toLowerCase().replace(/\s+/g, '')))
+  const final = [...sorted.filter((it) => manualKeys.has((it.title + it.link).toLowerCase().replace(/\s+/g, ''))),
+                 ...sorted.filter((it) => !manualKeys.has((it.title + it.link).toLowerCase().replace(/\s+/g, '')))]
 
   const out = {
     generated: new Date().toISOString(),
     total: sorted.length,
-    items: sorted,
+    items: final,
   }
   const file = join(ROOT, 'public', 'news.json')
   mkdirSync(dirname(file), { recursive: true })
