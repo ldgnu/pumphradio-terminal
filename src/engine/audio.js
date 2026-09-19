@@ -194,7 +194,34 @@ class AudioEngine {
 
   play() {
     if (this.bridge) this.bridge.ensureRunning()
-    if (this.audio.src) this.audio.play().catch(() => {})
+    if (!this.audio.src) {
+      const st = getState().station || this.station
+      if (st?.streamUrl) { this.loadStation(st); return }
+    }
+    if (this.audio.src) this.playWithRetry()
+  }
+
+  // play() con reintento: en el primer click, la load() del warm-up puede
+  // seguir en curso → play() rechaza con AbortError y muere en silencio.
+  // Reintentar cuando el stream esté listo (canplay) en vez de tragarse el error.
+  playWithRetry() {
+    const a = this.audio
+    const p = a.play()
+    if (!p) return
+    p.catch((err) => {
+      if (err?.name === 'AbortError') {
+        const retry = () => {
+          a.removeEventListener('canplay', retry)
+          a.play().catch(() => setLoading(false))
+        }
+        a.addEventListener('canplay', retry)
+        // techo de seguridad: si nunca llega canplay, liberar el "loading"
+        setTimeout(() => a.removeEventListener('canplay', retry), 10000)
+      } else {
+        // NotAllowedError (sin gesto), NotSupportedError, red: feedback al usuario
+        setLoading(false)
+      }
+    })
   }
   pause() { this.audio.pause() }
   toggle() { this.audio.paused ? this.play() : this.pause() }
