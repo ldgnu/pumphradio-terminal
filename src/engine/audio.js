@@ -39,7 +39,10 @@ class AudioEngine {
     this.audio.onplay = () => { setPlaying(true); this.bridge?.ensureRunning() }
     this.audio.onpause = () => setPlaying(false)
     this.audio.onwaiting = () => setLoading(true)
-    this.audio.onplaying = () => setLoading(false)
+    this.audio.onplaying = () => {
+      setLoading(false)
+      this.logTimeToAudio()
+    }
     this.audio.onerror = () => {
       setLoading(false)
       // Si estábamos en modo CORS (analizador real) y falla, recargar sin él
@@ -192,6 +195,19 @@ class AudioEngine {
     }, delay)
   }
 
+  // Métrica time-to-audio (prioridad 3 de Javi): tiempo desde el gesto de play
+  // hasta el evento 'playing' real. Log + expuesto en window.__pumph.ttfa
+  // para poder medirlo desde QA externo sin tocar el DOM.
+  logTimeToAudio() {
+    if (!this._playRequestedAt) return
+    const ms = Math.round(performance.now() - this._playRequestedAt)
+    this._playRequestedAt = null
+    console.info(`[audio] time-to-audio ${ms}ms (${this.station?.id || '?'})`)
+    window.__pumph = window.__pumph || {}
+    window.__pumph.ttfa = ms
+    window.__pumph.ttfa_station = this.station?.id || null
+  }
+
   play() {
     if (this.bridge) this.bridge.ensureRunning()
     if (!this.audio.src) {
@@ -206,6 +222,7 @@ class AudioEngine {
   // Reintentar cuando el stream esté listo (canplay) en vez de tragarse el error.
   playWithRetry() {
     const a = this.audio
+    if (!this._playRequestedAt) this._playRequestedAt = performance.now()
     const p = a.play()
     if (!p) return
     p.catch((err) => {
