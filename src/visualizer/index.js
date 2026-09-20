@@ -17,6 +17,14 @@ import { getAccent } from '../themes.js'
 
 const MODES = ['spectrum', 'oscilloscope', 'waveform', 'ascii', 'bars']
 
+// Auto-rotación aleatoria del modo (ms). 0 = desactivada.
+const AUTO_MODE_MS = 45000
+
+function randomModeExcept(current) {
+  const pool = MODES.filter((m) => m !== current)
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 // Suma de energía del array de frecuencias (Uint8Array). ~0 = analizador muerto/plano.
 function energy(freq) {
   let sum = 0
@@ -29,10 +37,19 @@ export class Visualizer {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
     this.labelEl = labelEl
-    this.mode = 'spectrum'
+    // Modo inicial ALEATORIO (nunca el mismo de siempre)
+    this.mode = randomModeExcept('spectrum')
+    if (Math.random() < 0.2) this.mode = 'spectrum' // spectrum sigue siendo el clásico 1 de cada 5
     this.raf = null
     this.t = 0
     this.smooth = new Float32Array(128).fill(0.05)
+    // Auto-rotación: cada AUTO_MODE_MS salta a otro modo al azar (solo sonando)
+    this._autoModeTimer = setInterval(() => {
+      if (getState().playing) {
+        this.setMode(randomModeExcept(this.mode))
+        this.labelEl && (this.labelEl.textContent = this.mode.toUpperCase())
+      }
+    }, AUTO_MODE_MS)
     // Referencia estable para poder remover el listener en destroy()
     this._onResize = () => this.onResize()
     this.onResize()
@@ -258,6 +275,7 @@ export class Visualizer {
 
   destroy() {
     if (this.raf) cancelAnimationFrame(this.raf)
+    if (this._autoModeTimer) clearInterval(this._autoModeTimer)
     window.removeEventListener('resize', this._onResize)
   }
 }

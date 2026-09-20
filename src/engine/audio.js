@@ -101,6 +101,32 @@ class AudioEngine {
     return true
   }
 
+  // Autostart: autoplay MUTEADO (los browsers lo permiten sin gesto).
+  // Bufferiza Y reproduce en silencio; al primer gesto del usuario se
+  // desmutea → la radio ya suena al instante en vez de arrancar de cero.
+  tryAutostart(station) {
+    if (!station?.streamUrl) return false
+    if (this._autostarted) return true
+    this._autostarted = true
+    this.loadStation(station)
+    this.audio.muted = true // clave: muteado el autoplay no se bloquea
+    this.playWithRetry()
+    // si el navegador igual lo bloquea, limpiar el flag muteado para no
+    // desmutear una reproducción que nunca arrancó
+    this.audio.play().catch(() => { this.audio.muted = false })
+    return true
+  }
+
+  // Desmutea el autostart en el primer gesto (click/touch/tecla).
+  unmuteAutostart() {
+    if (!this._autostarted || !this.audio.muted) return
+    this.audio.muted = false
+    this.bridge?.ensureRunning()
+    // si el autoplay muteado quedó pausado (algunos browsers), reanudar ya
+    // con el gesto del usuario como desbloqueo
+    if (this.audio.paused && this.audio.src) this.playWithRetry()
+  }
+
   loadStation(station) {
     if (!station?.streamUrl) return
     if (this.eventSource) { this.eventSource.close(); this.eventSource = null }

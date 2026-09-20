@@ -48,6 +48,13 @@ function init() {
   if (first) {
     setStation(first)
     audio.warm(first)
+    // AUTOSTART: arranca muteado con la estación guardada (o deep-techno,
+    // la primera habilitada) y suena al primer gesto — cero demora.
+    audio.tryAutostart(first)
+    const unmute = () => { audio.unmuteAutostart() }
+    document.addEventListener('pointerdown', unmute, { passive: true })
+    document.addEventListener('keydown', unmute, { passive: true })
+    document.addEventListener('touchend', unmute, { passive: true })
   }
 
   bindKeyboard()
