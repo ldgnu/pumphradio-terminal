@@ -33,8 +33,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch + translate news
-        run: npm run refresh-news
+      # news.json ya viene committeado: lo refresca + traduce el cron diario
+      # (con la capa LLM) y lo pushea. Regenerar acá sin la key del gateway
+      # dejaba noticias en inglés cuando gtx bloqueaba la IP del runner.
 
       - name: Build
         run: npm run build
