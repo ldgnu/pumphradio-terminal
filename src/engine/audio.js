@@ -30,9 +30,32 @@ class AudioEngine {
     this.maxReconnect = 5
     this.baseDelay = 3000
     this.corsFallback = false
-    this.bridge = new AnalyserBridge(this.audio)
+    // FIX visualizador: el grafo Web Audio se construye PEREZOSO, en el primer
+    // gesto del usuario (no acá). Si se construye al cargar la página, el
+    // AudioContext arranca suspended; cuando el elemento ya suena (autoplay
+    // muteado) y recién después se hace resume(), Chrome/Safari dejan el
+    // MediaElementSourceNode en silencio para siempre (energía 0 → visualizer
+    // en SIM eterno). Construir el grafo DENTRO del gesto reproduce el orden
+    // resume→play que sí funciona (verificado con repro headless).
+    this.bridge = null
+    this._rebuilds = 0
     this.lastTitle = ''
     this.bindEvents()
+  }
+
+  // Construye el grafo la primera vez que hay un gesto real (click/tecla).
+  // NO llama a este método desde código que corre sin gesto: el ctx nacería
+  // suspended y el elemento sonando → silencio permanente en el analyser.
+  ensureBridge() {
+    if (this.corsFallback || this.bridge) return this.bridge
+    try {
+      this.bridge = new AnalyserBridge(this.audio)
+      this.bridge.ensureRunning()
+    } catch (e) {
+      console.warn('[audio] no se pudo construir el grafo Web Audio:', e.message)
+      this.bridge = null
+    }
+    return this.bridge
   }
 
   bindEvents() {
@@ -121,7 +144,8 @@ class AudioEngine {
   unmuteAutostart() {
     if (!this._autostarted || !this.audio.muted) return
     this.audio.muted = false
-    this.bridge?.ensureRunning()
+    // primer gesto: acá sí (y es el momento clave) para construir el grafo
+    this.ensureBridge()
     // si el autoplay muteado quedó pausado (algunos browsers), reanudar ya
     // con el gesto del usuario como desbloqueo
     if (this.audio.paused && this.audio.src) this.playWithRetry()
@@ -146,7 +170,9 @@ class AudioEngine {
     this.applyVolume(getState().volume)
     setLoading(true)
     this.audio.load()
-    this.bridge?.ensureRunning()
+    // OJO: sin ensureBridge() acá — loadStation() también corre sin gesto
+    // (tryAutostart al boot). El grafo lo arman play()/unmuteAutostart,
+    // que siempre son gesto.
     this.audio.play().catch(() => setLoading(false))
 
     this.connectMetadata(station)
@@ -235,7 +261,7 @@ class AudioEngine {
   }
 
   play() {
-    if (this.bridge) this.bridge.ensureRunning()
+    this.ensureBridge() // dentro del gesto → resume/build en el orden correcto
     if (!this.audio.src) {
       const st = getState().station || this.station
       if (st?.streamUrl) { this.loadStation(st); return }
@@ -290,9 +316,11 @@ class AudioEngine {
     if (vol === 0 && currentVol > 0) {
       localStorage.setItem('pumphradio_previous_volume', String(currentVol))
     }
-    // En iOS, tocar botones de volumen es un gesto válido para desbloquear
-    // el AudioContext. Resume por si estaba suspended/interrupted.
-    this.bridge?.ensureRunning()
+    // OJO: acá NO va ensureBridge(). setVolume() también corre al boot vía
+    // initVolume() SIN gesto del usuario → construiría el grafo suspended
+    // con el elemento ya sonando → MediaElementSource mudo para siempre
+    // (bug del visualizador en SIM). El grafo lo construyen las rutas con
+    // gesto real: unmuteAutostart (pointerdown/keydown global) y play().
     this.applyVolume(vol)
     storeSetVolume(vol)
     localStorage.setItem('pumphradio_volume', String(vol))
@@ -308,6 +336,41 @@ class AudioEngine {
     } else {
       this.setVolume(saved)
     }
+  }
+
+  // Reconstruye el grafo COMPLETO (elemento nuevo + ctx nuevo) para escapar
+  // del estado "source en silencio permanente" de Chrome/Safari: si el
+  // elemento arrancó a sonar con el AudioContext suspendido, el resume()
+  // tardío no recupera el MediaElementSource. La única salida sana es
+  // re-crear el <audio> y el grafo dentro de un contexto ya desbloqueado.
+  // La llama el visualizer cuando detecta energía 0 sostenida sonando.
+  rebuildGraph() {
+    if (this.corsFallback) return false
+    if (this._rebuilds >= 3) return false // techo: no rebuild infinito
+    const src = this.audio.src
+    if (!src) return false
+    console.warn('[audio] rebuild del grafo Web Audio (source en silencio)')
+    try { this.bridge?.disconnect() } catch { /* ignore */ }
+    try { if (this.bridge?.ctx && this.bridge.ctx.state !== 'closed') this.bridge.ctx.close() } catch { /* ignore */ }
+    const wasPlaying = !this.audio.paused
+    this.audio.pause()
+    this.audio = new Audio()
+    this.audio.preload = 'none'
+    this.audio.crossOrigin = 'anonymous'
+    this.audio.volume = getState().volume / 100
+    this.audio.src = src
+    this.bindEvents()
+    this.bridge = new AnalyserBridge(this.audio)
+    this._rebuilds++
+    if (wasPlaying || this.station) {
+      this.audio.load()
+      // el rebuild lo dispara el visualizer (rAF) tras un gesto previo del
+      // usuario: el ctx nuevo arranca resume-able. Si el play falla, cae al
+      // flujo normal de loading/reconnect.
+      this.bridge.ensureRunning()
+      this.audio.play().catch(() => setLoading(false))
+    }
+    return true
   }
 
   getAnalyser() {

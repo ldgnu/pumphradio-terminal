@@ -175,7 +175,15 @@ export class Visualizer {
       // al modo con analizador (el fallback CORS puede haber sido un falso
       // positivo transitorio del stream).
       if (sim && getState().playing && this._simStreak > 300) {
-        if (audio.restoreCors && audio.restoreCors()) this._simStreak = 0
+        if (audio.restoreCors && audio.restoreCors()) {
+          this._simStreak = 0
+        } else if (audio.getAnalyser && audio.getAnalyser() && this._simStreak > 600) {
+          // ~10s con bridge construido (hubo gesto), ctx que debería estar
+          // corriendo, y energía 0 sostenida: el MediaElementSource quedó en
+          // silencio permanente (elemento arrancó a sonar con ctx suspendido).
+          // Única salida: reconstruir elemento+grafo completos.
+          if (audio.rebuildGraph()) this._simStreak = 0
+        }
       }
     }
 
