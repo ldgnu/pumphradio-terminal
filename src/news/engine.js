@@ -155,7 +155,7 @@ function openPane(item) {
   }
   pane.classList.add('open')
   pane.setAttribute('aria-hidden', 'false')
-  if (scrim) scrim.hidden = false
+  if (scrim) scrim.classList.add('show')
   document.getElementById('cmd-line')?.classList.add('dimmed')
 }
 
@@ -166,7 +166,7 @@ function closePane() {
     pane.classList.remove('open')
     pane.setAttribute('aria-hidden', 'true')
   }
-  if (scrim) scrim.hidden = true
+  if (scrim) scrim.classList.remove('show')
   document.getElementById('cmd-line')?.classList.remove('dimmed')
 }
 

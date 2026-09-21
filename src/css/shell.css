@@ -400,7 +400,12 @@ html, body {
   inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 50;
+  /* Fade suave: sin hidden (mata la transición), opacity + pointer-events */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
 }
+.pane-scrim.show { opacity: 1; pointer-events: auto; }
 .news-pane {
   position: fixed;
   top: 0;
