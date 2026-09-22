@@ -139,6 +139,7 @@ function openPane(item) {
   const pane = $('#news-pane')
   const scrim = $('#pane-scrim')
   if (!pane) return
+  paneTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
   setTextEl('#pane-source', item.source)
   setTextEl('#pane-title', cleanTitle(item.title))
   const langLabel = item.lang === 'es' ? 'ES' : 'EN'
@@ -157,7 +158,10 @@ function openPane(item) {
   pane.setAttribute('aria-hidden', 'false')
   if (scrim) scrim.classList.add('show')
   document.getElementById('cmd-line')?.classList.add('dimmed')
+  $('#pane-close')?.focus({ preventScroll: true })
 }
+
+let paneTrigger = null
 
 function closePane() {
   const pane = $('#news-pane')
@@ -168,6 +172,8 @@ function closePane() {
   }
   if (scrim) scrim.classList.remove('show')
   document.getElementById('cmd-line')?.classList.remove('dimmed')
+  paneTrigger?.focus({ preventScroll: true })
+  paneTrigger = null
 }
 
 export function initPaneControls() {
