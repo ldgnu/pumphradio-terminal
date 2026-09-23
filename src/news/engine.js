@@ -214,12 +214,17 @@ function fmtDate(d) {
   return (dt.getMonth() + 1) + '/' + dt.getDate()
 }
 
-/** Frescura relativa: NUEVO < 6h, HACE < 24h, else '' */
+/** Frescura relativa: NUEVO < 6h, HACE < 24h, else ''.
+ *  Algunos feeds (DJ Mag, TZ +0100) vienen con timestamps adelantados
+ *  hasta ~3h vs el reloj local: los tratamos como frescura 0 en vez de
+ *  edad negativa; si el item "viene del futuro" de más, no mostramos badge. */
 function freshness(d) {
   if (!d) return ''
   const ts = Date.parse(d)
   if (isNaN(ts)) return ''
-  const hours = (Date.now() - ts) / 3600000
+  let hours = (Date.now() - ts) / 3600000
+  if (hours > -3) hours = Math.max(0, hours)
+  else return ''
   if (hours < 6) return { label: 'NUEVO', cls: 'fresh-new' }
   if (hours < 24) return { label: 'HACE ' + Math.floor(hours) + 'h', cls: 'fresh-warm' }
   return ''
