@@ -19,24 +19,8 @@ import { enrich } from './enrich.js'
 import { AnalyserBridge } from '../visualizer/analyser.js'
 
 class AudioEngine {
-  // Crea el <audio> y lo cuelga del DOM (oculto). Antes era un Audio()
-  // huérfano: querySelector('audio') devolvía null y complicaba QA/tests
-  // externos y APIs de medios (MediaSession, etc.).
-  static _makeAudio() {
-    const el = new Audio()
-    el.preload = 'none'
-    try {
-      if (typeof document !== 'undefined' && !el.parentNode) {
-        el.setAttribute('aria-hidden', 'true')
-        el.style.display = 'none'
-        ;(document.body || document.documentElement).appendChild(el)
-      }
-    } catch { /* sin DOM (SSR/tests): igual funciona como Audio huérfano */ }
-    return el
-  }
-
   constructor() {
-    this.audio = new AudioEngine._makeAudio()
+    this.audio = new Audio()
     this.audio.preload = 'none'
     this.audio.crossOrigin = 'anonymous' // permite analizador real (requiere CORS)
     this.station = null
@@ -100,7 +84,8 @@ class AudioEngine {
     // recrear audio sin crossOrigin
     this.audio.pause()
     const src = this.audio.src
-    this.audio = new AudioEngine._makeAudio()
+    this.audio = new Audio()
+    this.audio.preload = 'none'
     this.audio.volume = getState().volume / 100
     if (src) this.audio.src = src
     // rebind
@@ -126,7 +111,8 @@ class AudioEngine {
     if (!this.corsFallback) return false
     const src = this.audio.src
     this.audio.pause()
-    this.audio = new AudioEngine._makeAudio()
+    this.audio = new Audio()
+    this.audio.preload = 'none'
     this.audio.crossOrigin = 'anonymous'
     this.audio.volume = getState().volume / 100
     if (src) this.audio.src = src
@@ -368,7 +354,8 @@ class AudioEngine {
     try { if (this.bridge?.ctx && this.bridge.ctx.state !== 'closed') this.bridge.ctx.close() } catch { /* ignore */ }
     const wasPlaying = !this.audio.paused
     this.audio.pause()
-    this.audio = new AudioEngine._makeAudio()
+    this.audio = new Audio()
+    this.audio.preload = 'none'
     this.audio.crossOrigin = 'anonymous'
     this.audio.volume = getState().volume / 100
     this.audio.src = src
