@@ -74,6 +74,32 @@ async function translateText(text, src) {
   return ok ? out.trim() : ''
 }
 
+// --- Capa 2b: MyMemory (gtx devuelve captcha "Sorry..." + 429 en IPs de
+// datacenter). Endpoint gratis, sin key, límite generoso por request.
+// Cuando gtx falla, se prueba mymemory ANTES de caer al gateway LLM (cuya
+// key suele estar muerta) — así el news.json no queda en inglés. ---------------
+const MYMEMORY = 'https://api.mymemory.translated.net/get'
+
+async function translateViaMyMemory(text, srcLang) {
+  if (!text) return ''
+  for (let t = 1; t <= 2; t++) {
+    try {
+      await sleep(150 * t)
+      const pair = `${srcLang && srcLang !== 'auto' ? srcLang : 'en'}|es`
+      const url = `${MYMEMORY}?q=${encodeURIComponent(text.slice(0, 500))}&langpair=${encodeURIComponent(pair)}`
+      const res = await fetch(url, { headers: { 'User-Agent': 'PumphRadio/0.1 (https://pumphradio.com.ar)' } })
+      if (!res.ok) continue
+      const data = await res.json()
+      const out = String(data?.responseData?.translatedText || '').trim()
+      // mymemory devuelve el original verbatim cuando no sabe traducir,
+      // o mete mayúsculas de "MYMEMORY WARNING"; eso no cuenta como traducción.
+      if (!out || /^MYMEMORY WARNING/i.test(out) || out.toLowerCase() === text.trim().toLowerCase()) continue
+      return out
+    } catch { /* retry */ }
+  }
+  return ''
+}
+
 // --- Capa 3: FreeLLMAPI (gateway OpenAI-compatible) -------------------------
 // El endpoint gtx de Google bloquea IPs de datacenter con captcha "Sorry...".
 // Fallback: batches de items al gateway (modelo auto) que devuelve JSON
@@ -166,8 +192,18 @@ for (const item of news.items) {
       item.lang = 'es'
       hitApi++
     } else {
-      // no se pudo con gtx (IP bloqueada / rate-limit) → cola para la capa 3
-      pending.push({ item, srcLang })
+      // gtx falló (IP bloqueada / rate-limit) → capa 2b: MyMemory (gratis, sin key)
+      const mmTitle = await translateViaMyMemory(item.title, srcLang)
+      if (mmTitle) {
+        item.title = mmTitle
+        const mmSummary = await translateViaMyMemory(item.summary || '', srcLang)
+        if (mmSummary) item.summary = mmSummary
+        item.lang = 'es'
+        hitApi++
+      } else {
+        // tampoco mymemory → cola para la capa 3 (FreeLLMAPI)
+        pending.push({ item, srcLang })
+      }
     }
   }
 }

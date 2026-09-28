@@ -310,6 +310,9 @@ html, body {
   cursor: pointer;
 }
 .news-item:hover { background: var(--bg-raise); border-left-color: var(--accent); }
+/* Foco de teclado en items de noticias (role=button, tabindex=0) */
+.news-item:focus-visible { background: var(--bg-raise); border-left-color: var(--accent); outline: 1px solid var(--accent); outline-offset: -1px; }
+.news-item:focus-visible .ni-title { color: var(--accent); }
 .ni-time { color: var(--dim); font-size: 11px; width: 38px; flex-shrink: 0; font-family: var(--font); }
 .ni-title { flex: 1; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .news-item:hover .ni-title { color: var(--accent); }

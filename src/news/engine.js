@@ -119,7 +119,8 @@ export function renderForStation(station) {
     return
   }
   wrap.innerHTML = items.map((it, i) => `
-    <div class="news-item" data-idx="${i}">
+    <div class="news-item" role="button" tabindex="0" data-idx="${i}"
+         aria-label="${escapeAttr(cleanTitle(it.title))} — abrir original">
       <span class="ni-time">${fmtDate(it.date)}</span>
       <span class="ni-title">${escapeHtml(cleanTitle(it.title))}</span>
       ${it.genres?.[0] ? `<span class="ni-tag">${escapeHtml(it.genres[0])}</span>` : ''}
@@ -128,10 +129,17 @@ export function renderForStation(station) {
     </div>
   `).join('')
 
-  // click → abrir pane tmux con el artículo
+  // click / Enter / Espacio → abrir pane tmux con el artículo
   wrap.querySelectorAll('.news-item').forEach((el, i) => {
     el.style.animationDelay = (i * 0.03) + 's'
     el.addEventListener('click', () => openPane(items[i]))
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        e.stopPropagation() // no debe caer en los atajos globales de main.js
+        openPane(items[i])
+      }
+    })
   })
 }
 
