@@ -134,6 +134,9 @@ export function renderForStation(station) {
     el.style.animationDelay = (i * 0.03) + 's'
     el.addEventListener('click', () => openPane(items[i]))
     el.addEventListener('keydown', (e) => {
+      // igual que boot.js: con Ctrl/Cmd/Alt no es "abrir noticia" (es atajo
+      // del navegador/usuario) — si no, Ctrl+Enter abría el pane encima.
+      if (e.ctrlKey || e.metaKey || e.altKey) return
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         e.stopPropagation() // no debe caer en los atajos globales de main.js
