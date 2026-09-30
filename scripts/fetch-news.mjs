@@ -51,11 +51,12 @@ function parseItemsRegex(xml, feed) {
     const block = m[1]
     const pick = (tag) => {
       const r = block.match(new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)</' + tag + '>', 'i'))
-      return r ? stripTags(r[1]).replace(/\s+/g, ' ').trim() : ''
+      return r ? cleanField(r[1]) : ''
     }
     const title = pick(isAtom ? 'title' : 'title')
-    const link = (block.match(/<link[^>]*href="([^"]*)"/i) || [])[1]
+    const rawLink = (block.match(/<link[^>]*href="([^"]*)"/i) || [])[1]
       || (block.match(/<link>([^<]*)<\/link>/i) || [])[1] || ''
+    const link = decodeEntities(rawLink)
     const desc = pick(isAtom ? 'summary' : 'description')
     const dateRaw = pick(isAtom ? 'published' : 'pubDate') || pick('updated')
     if (!title) continue
@@ -74,6 +75,30 @@ function parseItemsRegex(xml, feed) {
 
 function stripTags(s) {
   return s.replace(/<!\[CDATA\[|\]\]>/g, ' ').replace(/<[^>]*>/g, ' ')
+}
+
+// DJ Mag (y otros) escapan su propio HTML DENTRO del RSS: la description
+// llega como &lt;div class="..."&gt;&lt;p&gt;texto&lt;/p&gt;. Sin decodificar,
+// stripTags no ve nada: el markup queda adentro del summary, el traductor se
+// lo come y el news.json termina con tags crudos. Decodificamos ANTES de
+// stripTags y otra vez después (caso &amp;lt; / &amp;amp;).
+const NAMED_ENTITIES = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  rsquo: '’', lsquo: '‘', ldquo: '“', rdquo: '”',
+  ndash: '–', mdash: '—', hellip: '…', middot: '·',
+}
+function decodeEntities(s) {
+  return String(s).replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z][a-zA-Z0-9]*);/g, (m, body) => {
+    if (body[0] === '#') {
+      const code = (body[1] === 'x' || body[1] === 'X') ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10)
+      return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m
+    }
+    return NAMED_ENTITIES[body] ?? NAMED_ENTITIES[body.toLowerCase()] ?? m
+  })
+}
+function cleanField(s) {
+  const decoded = decodeEntities(String(s))
+  return decodeEntities(stripTags(decoded)).replace(/\s+/g, ' ').trim()
 }
 
 // Node/V8 no parsea abreviaturas de timezone tipo "BST"/"CEST" en Date.parse
