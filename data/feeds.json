@@ -65,6 +65,16 @@
       "enabled": true,
       "lang": "en",
       "source": "We Rave You"
+    },
+    {
+      "name": "UK Jazz News",
+      "url": "https://ukjazznews.com/feed/",
+      "genres": ["nujazz"],
+      "priority": 3,
+      "enabled": true,
+      "lang": "en",
+      "source": "UK Jazz News",
+      "_note": "pool nujazz (ROSE ROUGE): antes 0 noticias — sin feed jazz. Verificado vivo 2026-10-01 (10/10 items <=2 dias)."
     }
   ]
 }
