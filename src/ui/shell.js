@@ -138,6 +138,26 @@ function renderStationList() {
       ${s.enabled ? '<span class="st-live">●</span>' : ''}
     </div>
   `).join('')
+  // La fila activa puede quedar tapada por la barra inferior fija (que es
+  // position:fixed y flota sobre el scroll). El padding-bottom de .main solo
+  // protege el final del scroll, no las filas del medio: sin este scroll, la
+  // estación 3-4 se ve cortada y el click aterriza en el cmd-input.
+  // scroll-padding-bottom (en .main) le reserva el hueco al navegador.
+  syncActiveStationIntoView()
+}
+
+// Re-scrollea la fila activa. Separado de renderStationList() porque en el
+// render inicial la app sigue en display:none (layout 0): hay que llamarlo de
+// nuevo cuando la app ya es visible.
+export function syncActiveStationIntoView() {
+  const wrap = $('#stations-list')
+  if (!wrap) return
+  const active = wrap.querySelector('.station-row.active')
+  if (!active) return
+  // requestAnimationFrame: espera al layout real antes de medir.
+  requestAnimationFrame(() => {
+    active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  })
 }
 
 function renderStatusBar() {

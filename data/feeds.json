@@ -44,9 +44,10 @@
       "url": "https://www.mastersofhardcore.com/feed/",
       "genres": ["hardcore"],
       "priority": 3,
-      "enabled": true,
+      "enabled": false,
       "lang": "en",
-      "source": "Masters of Hardcore"
+      "source": "Masters of Hardcore",
+      "_note": "feed devuelve HTTP 200 pero sin posts nuevos desde 2026-07-30 (0 frescos) — deshabilitado 2026-10-02"
     },
     {
       "name": "DJ Mag",

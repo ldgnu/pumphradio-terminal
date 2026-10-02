@@ -7,7 +7,7 @@ import './css/shell.css'
 import './css/fx.css'
 import { STATIONS, getState, setStation, on, setPreviousVolume } from './store.js'
 import { audio } from './engine/audio.js'
-import { initShell } from './ui/shell.js'
+import { initShell, syncActiveStationIntoView } from './ui/shell.js'
 import { initBoot } from './ui/boot.js'
 import { initCommand, openCommand } from './ui/command.js'
 import { initNews, initPaneControls } from './news/engine.js'
@@ -271,5 +271,8 @@ function initThemeSwitcher() {
 }
 
 // Arranque
-initBoot(() => {})
+// El render inicial de la lista de estaciones corre con la app en display:none
+// (layout 0), así que su scrollIntoView no midió nada. Al terminar el boot la
+// app ya es visible: re-sincronizar la fila activa, o queda bajo la barra fija.
+initBoot(() => { syncActiveStationIntoView() })
 init()
