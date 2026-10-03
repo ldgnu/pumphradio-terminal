@@ -13,7 +13,7 @@
  *  - "zeno-sse": EventSource a api.zeno.fm/mounts/metadata/subscribe/<id>
  *  - "none":     sin metadata
  */
-import { setPlaying, setLoading, setNow, getState, setVolume as storeSetVolume } from '../store.js'
+import { setPlaying, setLoading, setNow, getState, setVolume as storeSetVolume, setBuffered } from '../store.js'
 import { parseStreamTitle } from './metadata.js'
 import { enrich } from './enrich.js'
 import { AnalyserBridge } from '../visualizer/analyser.js'
@@ -74,6 +74,29 @@ class AudioEngine {
       }
       this.scheduleReconnect()
     }
+    this.syncBuffered()
+    // Eventos que mantienen el buffer al día sin polling: 'progress' cada vez
+    // que el navegador descarga del stream, 'timeupdate' mientras avanza.
+    this.audio.addEventListener('progress', () => this.syncBuffered())
+    this.audio.addEventListener('timeupdate', () => this.syncBuffered())
+  }
+
+  // Segundos REALES de audioahead: el último rango buffered del elemento menos
+  // currentTime. Para un stream vivo no da un % (no hay duración total), así que
+  // se expone en segundos. Antes la status bar inventaba un porcentaje con
+  // Math.random() — dato falso en una interfaz que se presenta como terminal.
+  // Los eventos 'progress'/'timeupdate'/'waiting'/'playing' mantienen el valor
+  // fresco sin polling.
+  syncBuffered() {
+    const a = this.audio
+    if (!a) return
+    const ranges = a.buffered
+    let ahead = 0
+    try {
+      if (ranges && ranges.length) ahead = Math.max(0, ranges.end(ranges.length - 1) - a.currentTime)
+    } catch { ahead = 0 }
+    if (!isFinite(ahead)) ahead = 0
+    setBuffered(ahead)
   }
 
   // Pasa a modo sin-Web-Audio (stream sin CORS): audio sigue, visualizer simulado.

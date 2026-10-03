@@ -16,6 +16,7 @@ const state = {
   previousVolume: 80,
   now: { artist: '', track: '', streamTitle: '' },
   elapsed: 0,
+  buffered: 0, // segundos REALES de audio bufferizado (0 = desconocido)
   booted: false,
   view: 'nowplaying',
   visualizer: 'spectrum',
@@ -59,6 +60,13 @@ export function setPlaying(v) {
 export function setLoading(v) {
   state.loading = v
   emit('loading', v)
+}
+
+export function setBuffered(v) {
+  const sec = Math.max(0, Math.round(v) || 0)
+  if (state.buffered === sec) return
+  state.buffered = sec
+  emit('buffered', sec)
 }
 
 export function setVolume(v) {

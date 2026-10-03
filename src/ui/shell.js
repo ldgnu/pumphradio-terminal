@@ -16,6 +16,7 @@ export function initShell() {
   on('station', () => { renderHeader(); renderStationList(); renderNow() })
   on('playing', () => { renderStatusBar(); renderNow(); renderPlayIcon() })
   on('loading', renderStatusBar)
+  on('buffered', renderStatusBar)
   on('volume', renderStatusBar)
   on('volume', renderVolumeIcon)
   on('elapsed', () => { const el = $('#elapsed'); if (el) el.textContent = fmtElapsed(getState().elapsed) })
@@ -166,7 +167,13 @@ function renderStatusBar() {
   const buf = $('#status-buffer')
   const vol = $('#status-vol')
   if (play) play.textContent = st.loading ? 'BUFFERING' : (st.playing ? 'PLAYING' : 'PAUSED')
-  if (buf) buf.textContent = st.loading ? 'BUFFER ' + (70 + Math.random() * 30 | 0) + '%' : 'BUFFER 100%'
+  // Buffer REAL en segundos de audio por delante (ver audio.js syncBuffered).
+  // Antes era Math.random() — un porcentaje inventado en la barra de estado.
+  // Sin dato todavía se muestra '--', no un número falso.
+  if (buf) {
+    buf.textContent = st.buffered > 0 ? `BUFFER ${st.buffered}s` : 'BUFFER --'
+    buf.classList.toggle('dim', st.buffered <= 0)
+  }
   if (vol) vol.textContent = 'VOL ' + st.volume + '%'
   const vlabel = $('#vol-label')
   if (vlabel) vlabel.textContent = st.volume + '%'
