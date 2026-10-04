@@ -40,23 +40,48 @@ class AudioEngine {
     this.bridge = null
     this._rebuilds = 0
     this.lastTitle = ''
+    // El grafo Web Audio solo se arma dentro de un gesto real del usuario.
+    // Este flag es la garantía central: ensureBridge() lo consulta, así el
+    // invariant no depende de que cada call site se acuerde de no llamar.
+    this._hasGesture = false
+    this._bindGesture()
     this.bindEvents()
   }
 
-  // Construye el grafo la primera vez que hay un gesto real (click/tecla).
-  // NO llama a este método desde código que corre sin gesto: el ctx nacería
-  // suspended y el elemento sonando → silencio permanente en el analyser.
-  ensureBridge() {
-    if (this.corsFallback || this.bridge) return this.bridge
-    try {
-      this.bridge = new AnalyserBridge(this.audio)
-      this.bridge.ensureRunning()
-    } catch (e) {
-      console.warn('[audio] no se pudo construir el grafo Web Audio:', e.message)
-      this.bridge = null
+  // Marca "hubo gesto real" (pointer/tecla). Se registra en el constructor, o
+  // sea ANTES que los listeners de main.js: cuando unmuteAutostart() o play()
+  // llamen a ensureBridge() en el mismo evento, el flag ya está puesto.
+  // capture:true para correr antes que cualquier otro handler (y que un
+  // stopPropagation de otro componente no lo saltee).
+  _bindGesture() {
+    const mark = () => { this._hasGesture = true }
+    for (const evt of ['pointerdown', 'touchend', 'keydown']) {
+      document.addEventListener(evt, mark, { passive: true, capture: true })
     }
-    return this.bridge
   }
+
+  // Construye el grafo la primera vez que hay un gesto real (click/tecla).
+    // NO llamar desde código que corre sin gesto: el ctx nacería suspended y el
+    // elemento sonando → silencio permanente en el analyser (ver commit
+    // 3f98a87). El flag `_hasGesture` lo hace estructural en vez de rely-on-
+    // comment: el fast path de loadStation() con el autostart muteado dispara
+    // play() al boot SIN gesto, y desde ahí el ctx quedaba suspended siempre.
+    ensureBridge() {
+      if (this.corsFallback || this.bridge) return this.bridge
+      if (!this._hasGesture) return null // sin gesto: NO se arma el grafo
+      try {
+        this.bridge = new AnalyserBridge(this.audio)
+        this.bridge.ensureRunning()
+        // El grafo recién armado empieza con gain hardcodeado (0.8) y el
+        // elemento en volume nativo: hay que aplicar el volumen real del store
+        // o el usuario escucha siempre al 80% y VOL % miente.
+        this.applyVolume(getState().volume)
+      } catch (e) {
+        console.warn('[audio] no se pudo construir el grafo Web Audio:', e.message)
+        this.bridge = null
+      }
+      return this.bridge
+    }
 
   bindEvents() {
     this.audio.onplay = () => { setPlaying(true); this.bridge?.ensureRunning() }
@@ -367,8 +392,11 @@ class AudioEngine {
   // tardío no recupera el MediaElementSource. La única salida sana es
   // re-crear el <audio> y el grafo dentro de un contexto ya desbloqueado.
   // La llama el visualizer cuando detecta energía 0 sostenida sonando.
+  // Respeta el mismo invariant que ensureBridge(): sin gesto previo NO se arma
+  // (si no, el "arreglo" reintroduce el ctx suspended que queremos evitar).
   rebuildGraph() {
     if (this.corsFallback) return false
+    if (!this._hasGesture) return false
     if (this._rebuilds >= 3) return false // techo: no rebuild infinito
     const src = this.audio.src
     if (!src) return false
