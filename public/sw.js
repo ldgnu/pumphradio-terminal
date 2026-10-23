@@ -1,6 +1,10 @@
 // PumphRadio Service Worker
-// Cache-first for static assets; NEVER caches audio streams or news.json
-const CACHE_NAME = 'pumphradio-sw-v1';
+// Estrategia: network-first para el shell (HTML/navegación) → nunca más ves una
+// versión vieja del sitio; cache-first solo para assets con hash (inmutables).
+// NUNCA cachea streams de audio ni news.json.
+// IMPORTANTE: subir SW_VERSION en cada release que cambie assets sin hash.
+const SW_VERSION = 'v2';
+const CACHE_NAME = 'pumphradio-shell-' + SW_VERSION;
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -29,6 +33,23 @@ function shouldCache(request) {
   return true;
 }
 
+// ¿Es una navegación (HTML) o un asset SIN hash? Eso va network-first para que
+// un deploy nuevo se vea al instante. Los bundles de Vite llevan hash en el
+// nombre (index-AbC123.js) y son inmutables → cache-first ahí es seguro.
+function isShellRequest(request, url) {
+  if (request.mode === 'navigate') return true;
+  if (request.destination === 'document') return true;
+  try {
+    const p = new URL(url).pathname;
+    if (p === '/' || p.endsWith('/index.html')) return true;
+    // assets versionados por content-hash de Vite: index-C0QiVXkK.js (8+ chars alfanuméricos)
+    if (/-[A-Za-z0-9_]{8,}\.(js|css|woff2?)$/i.test(p)) return false;
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
@@ -53,6 +74,24 @@ self.addEventListener('fetch', (event) => {
     // Network-only for streams/news
     return;
   }
+
+  // Shell (HTML / assets sin hash): NETWORK-FIRST con fallback a cache offline.
+  if (isShellRequest(request, request.url)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Assets inmutables (con hash): cache-first.
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;

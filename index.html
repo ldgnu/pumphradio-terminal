@@ -228,7 +228,9 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        // updateViaCache:'none' → el navegador nunca sirve un sw.js viejo desde
+        // el HTTP cache: cada visita chequea si hay deploy nuevo.
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
       });
     }
   </script>
