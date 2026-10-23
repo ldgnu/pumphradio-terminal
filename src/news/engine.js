@@ -167,12 +167,30 @@ function openPane(item) {
   }
   pane.classList.add('open')
   pane.setAttribute('aria-hidden', 'false')
+  bodyOverflowRestore = document.body.style.overflow
+  document.body.style.overflow = 'hidden' // el fondo no scrollea detrás del modal
   if (scrim) scrim.classList.add('show')
   document.getElementById('cmd-line')?.classList.add('dimmed')
   $('#pane-close')?.focus({ preventScroll: true })
 }
 
 let paneTrigger = null
+let bodyOverflowRestore = null
+
+// Modal real: sin scroll del fondo y sin que Tab escape del diálogo (WCAG 2.4.3).
+function constrainPaneFocus(e) {
+  const pane = $('#news-pane')
+  if (!e || e.key !== 'Tab' || !pane || !pane.classList.contains('open')) return
+  const focusables = Array.from(pane.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])'))
+    .filter((el) => !el.hidden && el.offsetParent !== null)
+  if (!focusables.length) { e.preventDefault(); return }
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  const active = document.activeElement
+  if (!pane.contains(active)) { e.preventDefault(); first.focus({ preventScroll: true }) }
+  else if (e.shiftKey && active === first) { e.preventDefault(); last.focus({ preventScroll: true }) }
+  else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus({ preventScroll: true }) }
+}
 
 function closePane() {
   const pane = $('#news-pane')
@@ -183,6 +201,10 @@ function closePane() {
   }
   if (scrim) scrim.classList.remove('show')
   document.getElementById('cmd-line')?.classList.remove('dimmed')
+  if (bodyOverflowRestore !== null) {
+    document.body.style.overflow = bodyOverflowRestore
+    bodyOverflowRestore = null
+  }
   paneTrigger?.focus({ preventScroll: true })
   paneTrigger = null
 }
@@ -196,6 +218,7 @@ export function initPaneControls() {
   if (open) open.addEventListener('click', () => { /* deja que abra en otra pestaña */ })
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closePane()
+    else constrainPaneFocus(e)
   })
 }
 
