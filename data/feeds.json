@@ -35,8 +35,9 @@
       "url": "https://hardstylemag.com/feed/",
       "genres": ["hardstyle"],
       "priority": 3,
-      "enabled": true,
+      "enabled": false,
       "lang": "en",
+      "_note": "feed estancado: 0 items frescos en las dos corridas del 23/10/2026 — deshabilitado",
       "source": "Hardstyle Mag"
     },
     {
