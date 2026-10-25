@@ -93,6 +93,9 @@ function initVisualizer() {
   if (!canvas) return
   viz = new Visualizer(canvas, document.getElementById('viz-label'))
   viz.loop()
+  // Hook de QA (headless): estado del visualizer y del motor de audio.
+  window.__viz = { get: () => viz }
+  window.__audio = audio
 }
 
 function initFavButton() {

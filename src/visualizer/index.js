@@ -1,8 +1,9 @@
 /**
  * visualizer/index.js — Renderer multimodo.
- * Lee datos REALES del AnalyserNode (cuando hay CORS) y, si no, usa una
- * simulación reactiva (sync a la metadata y al BPM del género) — pero el
- * modo por defecto muestra el análisis real de Zeno.
+ *
+ * Lee SIEMPRE datos reales del AnalyserNode. Si no hay audio (pausa, stream
+ * mudo, contexto suspendido, CORS roto) el visualizador NO inventa
+ * movimiento: queda apagado en una línea base plana.
  *
  * Modos:
  *   spectrum     barras de frecuencia
@@ -80,57 +81,38 @@ export class Visualizer {
     return getAccent()
   }
 
-  // Datos: reales del analizador o simulados.
-  // Si el analyser existe pero devuelve datos PLANOS (ej. AudioContext
-  // suspendido en iOS, o stream sin señal), cae a simulación para que el
-  // visualizador siempre se mueva. iOS: el contexto arranca suspended y sin
-  // resume no llega audio real al AnalyserNode → detectamos energía ~0.
+  // Datos REALES del analizador. null = no hay audio que seguir.
+  // Sin fallback simulado: si el analizador no entrega energía, el
+  // visualizador se apaga en vez de bailar solo.
   data() {
     const an = audio.getAnalyser && audio.getAnalyser()
-    if (an && getState().playing) {
-      const f = an.readFrequency()
-      const w = an.readWaveform()
-      if (f && w && energy(f) > 4) {
-        this._simStreak = 0
-        this._realLast = true
-        return { real: true, freq: f, wave: w }
-      }
+    if (!an) return null
+    const f = an.readFrequency()
+    const w = an.readWaveform()
+    if (!f || !w) return null
+    if (energy(f) > 4) {
+      this._deadFrames = 0
+      this._realLast = true
+      return { real: true, freq: f, wave: w }
     }
-    // AudioContext suspendido (iOS autoplay/interrupción): intentar resume
-    // en vez de quedarse en simulado para siempre.
-    if (an && an.ctx && an.ctx.state !== 'running') an.ensureRunning()
-    this._simStreak = (this._simStreak || 0) + 1
+    // AudioContext suspendido (iOS autoplay/interrupción): intentar resume.
+    if (an.ctx && an.ctx.state !== 'running') an.ensureRunning()
+    this._deadFrames = (this._deadFrames || 0) + 1
     this._realLast = false
-    return { real: false, freq: this.simFreq(), wave: this.simWave() }
+    return null
   }
 
-  simFreq() {
-    // envelope tipo kick sincronizado al flujo (BPM del género)
-    const st = getState()
-    const bpm = (st.station && st.station.bpmHint) || 140
-    const t = this.t * (bpm / 60)
-    const kick = (Math.sin(t * Math.PI * 2) * 0.5 + 0.5) ** 3
-    const idle = st.playing ? 1 : 0.6 // pausa: calmado pero SIEMPRE visible
-    const out = new Uint8Array(128)
-    for (let i = 0; i < 128; i++) {
-      const f = i / 128
-      const bass = (1 - f) * 0.8 + 0.2
-      const v = (Math.abs(Math.sin(t * (1.5 + f * 8) + f * 9)) * 0.5 * bass +
-                 Math.random() * 0.2) * (0.3 + kick * 0.8) * idle
-      out[i] = Math.floor(Math.min(1, v) * 255) // 0-255, igual que AnalyserNode
-    }
-    return out
-  }
-  simWave() {
-    const st = getState()
-    const t = this.t
-    const idle = st.playing ? 1 : 0.55
-    const out = new Uint8Array(128)
-    for (let i = 0; i < 128; i++) {
-      const v = Math.sin(i * 0.2 + t * 10) * 0.4 * idle + Math.sin(i * 0.5 - t * 7) * 0.3 * idle
-      out[i] = Math.floor(128 + v * 127) // centrado en 128, rango 0-255
-    }
-    return out
+  // Línea base plana = "apagado": muestra que está vivo pero sin señal.
+  renderNoSignal(ctx, accent) {
+    const y = this.h / 2
+    ctx.strokeStyle = accent
+    ctx.globalAlpha = 0.18
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(this.w, y)
+    ctx.stroke()
+    ctx.globalAlpha = 1
+    if (this.labelEl) this.labelEl.textContent = this.mode.toUpperCase() + ' · SIN SEÑAL'
   }
 
   loop() {
@@ -143,9 +125,32 @@ export class Visualizer {
     // loop para siempre (pausar → visualizer muerto aunque luego se reproduzca).
     if (!st.playing) {
       this._wasOff = true
+      if (this.labelEl) this.labelEl.textContent = this.mode.toUpperCase() + ' · OFF'
       this.raf = requestAnimationFrame(() => this.loop())
       return
     }
+
+    const d = this.data()
+
+    // Sonando pero sin datos del analizador: apagado (línea plana), cero
+    // animación inventada. Cada ~1.5s se intenta recuperar el analizador.
+    if (!d) {
+      this.renderNoSignal(ctx, this.accent())
+      this._recoverTick = (this._recoverTick || 0) + 1
+      if (this._recoverTick >= 90) {
+        this._recoverTick = 0
+        // ¿El bridge sigue existiendo pero mudo? Reconstruir elemento+grafo.
+        if (audio.getAnalyser && audio.getAnalyser()) {
+          if (audio.rebuildGraph && audio.rebuildGraph()) this._deadFrames = 0
+        } else if (audio.restoreCors && audio.restoreCors()) {
+          this._deadFrames = 0
+        }
+      }
+      this.raf = requestAnimationFrame(() => this.loop())
+      return
+    }
+
+    this._recoverTick = 0
     // Primera vuelta tras reanudar: animación de encendido suave.
     if (this._wasOff) {
       this._wasOff = false
@@ -156,42 +161,34 @@ export class Visualizer {
     const accent = this.accent()
 
     switch (this.mode) {
-      case 'spectrum': this.renderSpectrum(ctx, accent); break
-      case 'oscilloscope': this.renderOscilloscope(ctx, accent); break
-      case 'waveform': this.renderWaveform(ctx, accent); break
-      case 'ascii': this.renderAscii(ctx, accent); break
-      case 'bars': this.renderBars(ctx, accent); break
+      case 'spectrum': this.renderSpectrum(ctx, accent, d); break
+      case 'oscilloscope': this.renderOscilloscope(ctx, accent, d); break
+      case 'waveform': this.renderWaveform(ctx, accent, d); break
+      case 'ascii': this.renderAscii(ctx, accent, d); break
+      case 'bars': this.renderBars(ctx, accent, d); break
     }
     ctx.globalAlpha = 1
 
-    // Indicador LIVE/SIM en el label (cada ~1s, barato): distingue el análisis
-    // real de la simulación, así un visualizer "que sigue cualquier cosa" se ve al toque.
+    // Indicador LIVE en el label (cada ~1s, barato).
     this._labelTick = (this._labelTick || 0) + 1
     if (this._labelTick >= 60 && this.labelEl) {
       this._labelTick = 0
-      const sim = !this._realLast
-      this.labelEl.textContent = this.mode.toUpperCase() + (sim ? ' · SIM' : ' · LIVE')
-      // Llevamos un rato en simulado pese a estar "sonando": probamos volver
-      // al modo con analizador (el fallback CORS puede haber sido un falso
-      // positivo transitorio del stream).
-      if (sim && getState().playing && this._simStreak > 300) {
-        if (audio.restoreCors && audio.restoreCors()) {
-          this._simStreak = 0
-        } else if (audio.getAnalyser && audio.getAnalyser() && this._simStreak > 600) {
-          // ~10s con bridge construido (hubo gesto), ctx que debería estar
-          // corriendo, y energía 0 sostenida: el MediaElementSource quedó en
-          // silencio permanente (elemento arrancó a sonar con ctx suspendido).
-          // Única salida: reconstruir elemento+grafo completos.
-          if (audio.rebuildGraph()) this._simStreak = 0
-        }
-      }
+      this.labelEl.textContent = this.mode.toUpperCase() + ' · LIVE'
+    }
+
+    // Hook de QA: permite verificar desde afuera si el visualizador está
+    // siguiendo audio real (window.__vizState) sin screenshot.
+    window.__vizState = {
+      mode: this.mode,
+      live: !!this._realLast,
+      playing: st.playing,
+      frames: (this._frames = (this._frames || 0) + 1),
     }
 
     this.raf = requestAnimationFrame(() => this.loop())
   }
 
-  renderSpectrum(ctx, accent) {
-    const { freq } = this.data()
+  renderSpectrum(ctx, accent, { freq }) {
     const n = 48
     const barW = this.w / n
     for (let i = 0; i < n; i++) {
@@ -207,8 +204,7 @@ export class Visualizer {
     ctx.globalAlpha = 1
   }
 
-  renderOscilloscope(ctx, accent) {
-    const { wave } = this.data()
+  renderOscilloscope(ctx, accent, { wave }) {
     ctx.strokeStyle = accent
     ctx.globalAlpha = 0.9
     ctx.beginPath()
@@ -221,8 +217,7 @@ export class Visualizer {
     ctx.globalAlpha = 1
   }
 
-  renderWaveform(ctx, accent) {
-    const { wave } = this.data()
+  renderWaveform(ctx, accent, { wave }) {
     const grad = ctx.createLinearGradient(0, 0, 0, this.h)
     grad.addColorStop(0, 'rgba(0,0,0,0)')
     grad.addColorStop(0.5, accent)
@@ -238,8 +233,7 @@ export class Visualizer {
     }
   }
 
-  renderAscii(ctx, accent) {
-    const { freq } = this.data()
+  renderAscii(ctx, accent, { freq }) {
     const blocks = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
     ctx.fillStyle = accent
     ctx.globalAlpha = 0.9
@@ -260,8 +254,7 @@ export class Visualizer {
     ctx.globalAlpha = 1
   }
 
-  renderBars(ctx, accent) {
-    const { freq } = this.data()
+  renderBars(ctx, accent, { freq }) {
     const rows = 8
     const cols = 32
     ctx.fillStyle = accent
