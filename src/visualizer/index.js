@@ -55,14 +55,28 @@ export class Visualizer {
     this._onResize = () => this.onResize()
     this.onResize()
     window.addEventListener('resize', this._onResize)
+    // ResizeObserver: cubre TODOS los cambios de tamaño que resize no ve —
+    // entrar/salir de modo ambient (el .viz pasa a position:fixed inset:0),
+    // rotación, pane, app que pasa de display:none a flex, cambios de layout.
+    // Sin esto el canvas quedaba con el tamaño viejo estirado por CSS.
+    if (typeof ResizeObserver !== 'undefined') {
+      this._ro = new ResizeObserver(() => this.onResize())
+      const box = this.canvas.parentElement || this.canvas
+      this._ro.observe(box)
+    }
   }
 
   onResize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    this.w = this.canvas.clientWidth
-    this.h = this.canvas.clientHeight
-    this.canvas.width = this.w * dpr
-    this.canvas.height = this.h * dpr
+    const w = this.canvas.clientWidth
+    const h = this.canvas.clientHeight
+    // Canvas oculto/colapsado (0x0): no tocar nada, quedaría sin superficie.
+    if (!w || !h) return
+    if (w === this.w && h === this.h && this.canvas.width === Math.round(w * dpr)) return
+    this.w = w
+    this.h = h
+    this.canvas.width = Math.round(w * dpr)
+    this.canvas.height = Math.round(h * dpr)
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   }
 
@@ -87,6 +101,13 @@ export class Visualizer {
   data() {
     const an = audio.getAnalyser && audio.getAnalyser()
     if (!an) return null
+    // Contexto suspendido/interrupted (iOS autoplay, llamada, screen lock):
+    // getByteFrequencyData devuelve los ÚLTIMOS valores congelados, no ceros →
+    // sin este chequeo el visualizador sigue "bailando" sin música.
+    if (an.ctx && an.ctx.state !== 'running') {
+      an.ensureRunning()
+      return null
+    }
     const f = an.readFrequency()
     const w = an.readWaveform()
     if (!f || !w) return null
@@ -95,11 +116,41 @@ export class Visualizer {
       this._realLast = true
       return { real: true, freq: f, wave: w }
     }
-    // AudioContext suspendido (iOS autoplay/interrupción): intentar resume.
-    if (an.ctx && an.ctx.state !== 'running') an.ensureRunning()
     this._deadFrames = (this._deadFrames || 0) + 1
     this._realLast = false
     return null
+  }
+
+  // Estado único del visualizador: 'off' (no hay reproducción), 'nosignal'
+  // (reproduce pero el analizador no entrega señal) o 'live' (audio real).
+  // Centraliza label + hook de QA (window.__vizState) para que NUNCA queden
+  // desincronizados con lo que se dibuja.
+  setState(state, extra) {
+    const changed = state !== this._state
+    this._state = state
+    if (state !== 'live') {
+      // Al apagarse, limpiar la memoria visual: sin esto al reanudar el
+      // primer frame arranca con los picos viejos congelados.
+      this.smooth.fill(0)
+      this._power = 0
+    }
+    if (this.labelEl) {
+      const suffix =
+        state === 'live' ? ' · LIVE'
+        : state === 'off' ? ' · OFF'
+        : state === 'muted' ? ' · MUTED'
+        : ' · SIN SEÑAL'
+      this.labelEl.textContent = this.mode.toUpperCase() + suffix
+    }
+    window.__vizState = {
+      mode: this.mode,
+      state,
+      live: state === 'live',
+      playing: !!getState().playing,
+      frames: (this._frames = (this._frames || 0) + 1),
+      ...(extra || {}),
+    }
+    return changed
   }
 
   // Línea base plana = "apagado": muestra que está vivo pero sin señal.
@@ -112,7 +163,6 @@ export class Visualizer {
     ctx.lineTo(this.w, y)
     ctx.stroke()
     ctx.globalAlpha = 1
-    if (this.labelEl) this.labelEl.textContent = this.mode.toUpperCase() + ' · SIN SEÑAL'
   }
 
   loop() {
@@ -123,9 +173,11 @@ export class Visualizer {
     // Visualizador apagado si no hay reproducción: solo reacciona a la música.
     // OJO: reprogramar el rAF ANTES del return — un return directo mata el
     // loop para siempre (pausar → visualizer muerto aunque luego se reproduzca).
-    if (!st.playing) {
+    if (!st.playing || audio.audio?.muted) {
       this._wasOff = true
-      if (this.labelEl) this.labelEl.textContent = this.mode.toUpperCase() + ' · OFF'
+      // Autostart muteado (iPhone): el elemento reproduce en silencio hasta
+      // el primer gesto. Se muestra MUTED para que no parezca roto.
+      this.setState(st.playing && audio.audio?.muted ? 'muted' : 'off', { muted: !!audio.audio?.muted })
       this.raf = requestAnimationFrame(() => this.loop())
       return
     }
@@ -136,6 +188,7 @@ export class Visualizer {
     // animación inventada. Cada ~1.5s se intenta recuperar el analizador.
     if (!d) {
       this.renderNoSignal(ctx, this.accent())
+      this.setState('nosignal')
       this._recoverTick = (this._recoverTick || 0) + 1
       if (this._recoverTick >= 90) {
         this._recoverTick = 0
@@ -169,21 +222,8 @@ export class Visualizer {
     }
     ctx.globalAlpha = 1
 
-    // Indicador LIVE en el label (cada ~1s, barato).
-    this._labelTick = (this._labelTick || 0) + 1
-    if (this._labelTick >= 60 && this.labelEl) {
-      this._labelTick = 0
-      this.labelEl.textContent = this.mode.toUpperCase() + ' · LIVE'
-    }
-
-    // Hook de QA: permite verificar desde afuera si el visualizador está
-    // siguiendo audio real (window.__vizState) sin screenshot.
-    window.__vizState = {
-      mode: this.mode,
-      live: !!this._realLast,
-      playing: st.playing,
-      frames: (this._frames = (this._frames || 0) + 1),
-    }
+    // Estado LIVE + hook de QA, siempre sincronizado con lo dibujado.
+    this.setState('live', { energy: energy(d.freq) })
 
     this.raf = requestAnimationFrame(() => this.loop())
   }
@@ -237,10 +277,13 @@ export class Visualizer {
     const blocks = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█']
     ctx.fillStyle = accent
     ctx.globalAlpha = 0.9
-    const rows = Math.floor(this.h / 16)
-    const cols = 24
     const fs = 12
     ctx.font = fs + 'px monospace'
+    // Columnas dinámicas: usan TODO el ancho real del canvas (antes 24 fijas
+    // dejaban el espectro apretado a la izquierda en desktop/ambient).
+    const colW = 11
+    const cols = Math.max(8, Math.min(64, Math.floor(this.w / colW)))
+    const rows = Math.max(2, Math.floor(this.h / 16))
     for (let c = 0; c < cols; c++) {
       const idx = Math.floor(Math.pow(c / cols, 1.8) * (freq.length - 1))
       const v = (freq[idx] || 0) / 255
@@ -249,7 +292,7 @@ export class Visualizer {
       for (let r = 0; r < rows; r++) {
         s = (r < h ? blocks[Math.min(7, Math.floor(v * 8))] : ' ') + s
       }
-      ctx.fillText(s, c * 11, this.h - 4)
+      ctx.fillText(s, c * colW, this.h - 4)
     }
     ctx.globalAlpha = 1
   }
@@ -277,6 +320,7 @@ export class Visualizer {
   destroy() {
     if (this.raf) cancelAnimationFrame(this.raf)
     if (this._autoModeTimer) clearInterval(this._autoModeTimer)
+    if (this._ro) this._ro.disconnect()
     window.removeEventListener('resize', this._onResize)
   }
 }

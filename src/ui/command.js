@@ -129,9 +129,25 @@ function run(cmd) {
     case 'status':
       log('> ' + (getState().station?.name || 'no station') + ' · ' + (getState().playing ? 'PLAYING' : 'PAUSED') + ' · vol ' + getState().volume + '%')
       break
-    case 'signal':
-      log('> SIGNAL ' + (88 + Math.floor(Math.random() * 12)) + '% · NODE ' + (getState().station?.node || '---') + ' · BPM ' + (getState().station?.bpmHint || '?') + ' · ' + (getState().playing ? 'LOCKED' : 'IDLE'))
+    case 'signal': {
+      // Señal REAL medida del AnalyserNode (antes: 88 + Math.random(), un
+      // dato inventado en una interfaz que se presenta como terminal).
+      const an = audio.getAnalyser && audio.getAnalyser()
+      const st = getState()
+      if (!st.playing) { log('> SIGNAL --- · ' + (st.station?.name || 'no station') + ' · IDLE (sin reproduccion)'); break }
+      if (!an || !an.ctx || an.ctx.state !== 'running') {
+        log('> SIGNAL --- · ' + (st.station?.name || '?') + ' · sin analizador (CORS/sin gesto)')
+        break
+      }
+      const f = an.readFrequency()
+      let sum = 0
+      for (let i = 0; i < f.length; i++) sum += f[i]
+      const avg = sum / f.length              // 0..255
+      const pct = Math.round((avg / 255) * 100) // % de escala del analizador
+      const bars = '▮'.repeat(Math.max(0, Math.min(10, Math.round(pct / 10))))
+      log('> SIGNAL ' + pct + '% ' + bars + ' · NODE ' + (st.station?.node || '---') + ' · BPM ' + (st.station?.bpmHint || '?') + ' · LIVE')
       break
+    }
     case 'volume': {
       const v = parseInt(a, 10)
       if (!isNaN(v)) { audio.setVolume(v); log('> volume ' + v + '%') } else log('> usage: volume <0-100>')

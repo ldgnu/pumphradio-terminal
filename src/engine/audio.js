@@ -20,9 +20,7 @@ import { AnalyserBridge } from '../visualizer/analyser.js'
 
 class AudioEngine {
   constructor() {
-    this.audio = new Audio()
-    this.audio.preload = 'none'
-    this.audio.crossOrigin = 'anonymous' // permite analizador real (requiere CORS)
+    this.audio = this._createAudio(true)
     this.station = null
     this.eventSource = null
     this.reconnectTimer = null
@@ -46,6 +44,43 @@ class AudioEngine {
     this._hasGesture = false
     this._bindGesture()
     this.bindEvents()
+  }
+
+  // Crea el elemento <audio> y lo ADJUNTA al DOM (oculto).
+  // iOS/Safari: un elemento creado con new Audio() y nunca insertado en el
+  // documento no participa del pipeline de media de forma confiable —
+  // createMediaElementSource() sobre un elemento huérfano deja el grafo en
+  // silencio (el visualizer se queda sin señal para siempre). Además iOS
+  // necesita playsinline explícito. Un solo lugar para los 4 sitios que
+  // recrean el elemento (init, toFallback, restoreCors, rebuildGraph).
+  _createAudio(withCors) {
+    const a = document.createElement('audio')
+    a.preload = 'none'
+    a.playsInline = true
+    a.setAttribute('playsinline', '')
+    a.setAttribute('webkit-playsinline', '')
+    if (withCors) a.crossOrigin = 'anonymous' // analizador real (requiere CORS)
+    a.id = 'pumphradio-audio'
+    a.style.display = 'none'
+    // Sacar el anterior del DOM para no acumular elementos fantasma
+    // (cada uno seguiría conectado al contexto viejo).
+    try {
+      document.querySelectorAll('audio#pumphradio-audio').forEach((old) => old.remove())
+    } catch { /* ignore */ }
+    try { document.body.appendChild(a) } catch { /* pre-DOM: se adjunta al vuelo */ }
+    this._attachWhenReady(a)
+    return a
+  }
+
+  // Si el motor arranca antes de que exista <body>, adjuntar en cuanto se pueda.
+  _attachWhenReady(a) {
+    if (a.isConnected) return
+    const attach = () => {
+      if (a.isConnected) return
+      try { document.body?.appendChild(a) } catch { /* ignore */ }
+    }
+    if (document.body) attach()
+    else document.addEventListener('DOMContentLoaded', attach, { once: true })
   }
 
   // Marca "hubo gesto real" (pointer/tecla). Se registra en el constructor, o
@@ -132,8 +167,7 @@ class AudioEngine {
     // recrear audio sin crossOrigin
     this.audio.pause()
     const src = this.audio.src
-    this.audio = new Audio()
-    this.audio.preload = 'none'
+    this.audio = this._createAudio(false)
     this.audio.volume = getState().volume / 100
     if (src) this.audio.src = src
     // rebind
@@ -159,9 +193,7 @@ class AudioEngine {
     if (!this.corsFallback) return false
     const src = this.audio.src
     this.audio.pause()
-    this.audio = new Audio()
-    this.audio.preload = 'none'
-    this.audio.crossOrigin = 'anonymous'
+    this.audio = this._createAudio(true)
     this.audio.volume = getState().volume / 100
     if (src) this.audio.src = src
     this.bridge = new AnalyserBridge(this.audio)
@@ -192,6 +224,10 @@ class AudioEngine {
   unmuteAutostart() {
     if (!this._autostarted || !this.audio.muted) return
     this.audio.muted = false
+    // Marca temporal: este mismo gesto va a generar además un click en el
+    // botón play (pointerdown → click). toggle() la consume para NO pausar
+    // lo que el usuario acaba de arrancar (bug iPhone).
+    this._justUnmutedAt = (typeof performance !== 'undefined' ? performance.now() : Date.now())
     // primer gesto: acá sí (y es el momento clave) para construir el grafo
     this.ensureBridge()
     // si el autoplay muteado quedó pausado (algunos browsers), reanudar ya
@@ -341,7 +377,34 @@ class AudioEngine {
     })
   }
   pause() { this.audio.pause() }
-  toggle() { this.audio.paused ? this.play() : this.pause() }
+
+  // ¿Estamos en autostart muteado? (elemento reproduciendo en silencio,
+  // esperando el primer gesto del usuario para desmutear).
+  isMutedAutostart() {
+    return !!(this._autostarted && this.audio && this.audio.muted && !this.audio.paused)
+  }
+
+  toggle() {
+    // BUG iPhone: con autostart muteado el elemento YA está reproduciendo.
+    // El primer tap disparaba unmuteAutostart() (listener global de
+    // pointerdown) y después este toggle() veía "no está pausado" → PAUSABA
+    // la radio. Resultado: en iPhone el primer toque en play apagaba el
+    // audio y el visualizer quedaba muerto (parecía que "no funciona").
+    // Con autostart muteado, tocar play = desmutear, nunca pausar.
+    if (this.isMutedAutostart()) {
+      this.unmuteAutostart()
+      return
+    }
+    // El listener global de unmute ya corrió en este mismo gesto: el usuario
+    // quiso empezar a escuchar, así que NO se alterna (se consume la marca).
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now())
+    if (this._justUnmutedAt && now - this._justUnmutedAt < 800) {
+      this._justUnmutedAt = 0
+      if (this.audio.paused && this.audio.src) this.playWithRetry()
+      return
+    }
+    this.audio.paused ? this.play() : this.pause()
+  }
 
   applyVolume(v) {
     const vol = Math.max(0, Math.min(100, v))
@@ -405,9 +468,7 @@ class AudioEngine {
     try { if (this.bridge?.ctx && this.bridge.ctx.state !== 'closed') this.bridge.ctx.close() } catch { /* ignore */ }
     const wasPlaying = !this.audio.paused
     this.audio.pause()
-    this.audio = new Audio()
-    this.audio.preload = 'none'
-    this.audio.crossOrigin = 'anonymous'
+    this.audio = this._createAudio(true)
     this.audio.volume = getState().volume / 100
     this.audio.src = src
     this.bindEvents()
