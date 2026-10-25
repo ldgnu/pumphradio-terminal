@@ -51,6 +51,16 @@
       "_note": "feed devuelve HTTP 200 pero sin posts nuevos desde 2026-07-30 (0 frescos) — deshabilitado 2026-10-02"
     },
     {
+      "name": "We Rave You - Hardstyle",
+      "url": "https://weraveyou.com/tag/hardstyle/feed/",
+      "genres": ["hardstyle"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "We Rave You",
+      "_note": "feed por tag hardstyle, verificado vivo 2026-10-24 (item mas nuevo 20/09)"
+    },
+    {
       "name": "DJ Mag",
       "url": "https://djmag.com/rss.xml",
       "genres": ["deep", "hardstyle"],

@@ -3,7 +3,7 @@
 // versión vieja del sitio; cache-first solo para assets con hash (inmutables).
 // NUNCA cachea streams de audio ni news.json.
 // IMPORTANTE: subir SW_VERSION en cada release que cambie assets sin hash.
-const SW_VERSION = 'v3';
+const SW_VERSION = 'v4';
 const CACHE_NAME = 'pumphradio-shell-' + SW_VERSION;
 const STATIC_ASSETS = [
   './',
