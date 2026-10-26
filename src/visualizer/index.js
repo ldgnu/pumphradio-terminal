@@ -18,6 +18,14 @@ import { getAccent } from '../themes.js'
 
 const MODES = ['spectrum', 'oscilloscope', 'waveform', 'ascii', 'bars']
 
+// Accesibilidad: con "menos movimiento" (prefers-reduced-motion) el visualizer
+// sigue leyendo la señal real, pero a ~8 fps en vez de 60 — menos parpadeo y
+// menos CPU/batería. Se reevalúa al vuelo (el usuario puede cambiar el ajuste).
+function reducedMotion() {
+  return typeof matchMedia !== 'undefined' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 // Auto-rotación aleatoria del modo (ms). 0 = desactivada.
 const AUTO_MODE_MS = 45000
 
@@ -167,6 +175,17 @@ export class Visualizer {
 
   loop() {
     const st = getState()
+    // Menos movimiento: renderizar a ~8 fps (cada 8vo frame). La barra sigue
+    // la señal real, solo la cadencia baja.
+    if (reducedMotion() && getState().playing) {
+      this._rmFrames = (this._rmFrames || 0) + 1
+      if (this._rmFrames % 8 !== 0) {
+        this.raf = requestAnimationFrame(() => this.loop())
+        return
+      }
+    } else {
+      this._rmFrames = 0
+    }
     this.t += 0.016
     const ctx = this.ctx
     ctx.clearRect(0, 0, this.w, this.h)
