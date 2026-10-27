@@ -250,6 +250,7 @@ export class Visualizer {
   renderSpectrum(ctx, accent, { freq }) {
     const n = 48
     const barW = this.w / n
+    ctx.fillStyle = accent // hoisted: la paleta no cambia por barra, así el estilo deja de escribirse 48 veces por frame
     for (let i = 0; i < n; i++) {
       // agrupar bandas log
       const idx = Math.floor(Math.pow(i / n, 1.7) * (freq.length - 1))
