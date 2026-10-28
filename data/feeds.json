@@ -79,6 +79,26 @@
       "source": "We Rave You"
     },
     {
+      "name": "We Rave You - Hard Techno",
+      "url": "https://weraveyou.com/tag/hard-techno/feed/",
+      "genres": ["techno"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "We Rave You",
+      "_note": "feed por tag hard-techno, verificado vivo 2026-10-27 (item mas nuevo 26/10)"
+    },
+    {
+      "name": "Festileaks",
+      "url": "https://www.festileaks.com/feed/",
+      "genres": ["hardstyle", "hardcore"],
+      "priority": 1,
+      "enabled": true,
+      "lang": "nl",
+      "source": "Festileaks",
+      "_note": "portal de festivales, verificado vivo 2026-10-27 (items de ese dia)"
+    },
+    {
       "name": "UK Jazz News",
       "url": "https://ukjazznews.com/feed/",
       "genres": ["nujazz"],
