@@ -278,5 +278,7 @@ function escapeHtml(s) {
   return d.innerHTML
 }
 function escapeAttr(s) {
-  return String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+  // escapar entidades primero (& y <), recién después las comillas:
+  // al revés termina con &amp;quot; (doble-escape) en aria-label.
+  return escapeHtml(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
