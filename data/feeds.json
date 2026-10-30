@@ -55,10 +55,10 @@
       "url": "https://weraveyou.com/tag/hardstyle/feed/",
       "genres": ["hardstyle"],
       "priority": 2,
-      "enabled": true,
+      "enabled": false,
       "lang": "en",
       "source": "We Rave You",
-      "_note": "feed por tag hardstyle, verificado vivo 2026-10-24 (item mas nuevo 20/09)"
+      "_note": "feed por tag hardstyle: muerto desde 20/09/2026 (0 items frescos en 3 corridas 28-29/10) — deshabilitado"
     },
     {
       "name": "DJ Mag",
@@ -97,6 +97,16 @@
       "lang": "nl",
       "source": "Festileaks",
       "_note": "portal de festivales, verificado vivo 2026-10-27 (items de ese dia)"
+    },
+    {
+      "name": "Crack Magazine",
+      "url": "https://crackmagazine.net/feed/",
+      "genres": ["techno", "deep"],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "Crack Magazine",
+      "_note": "mag under UK (techno/electronic/festivales). Verificado vivo 2026-10-29 (item mas nuevo 26/10)."
     },
     {
       "name": "UK Jazz News",

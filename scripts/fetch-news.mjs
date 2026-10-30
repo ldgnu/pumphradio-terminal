@@ -19,23 +19,33 @@ const feeds = JSON.parse(readFileSync(join(ROOT, 'data/feeds.json'), 'utf8')).fe
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36'
 const MAX_ITEMS = 25
 
+// Un solo intento depende de un timeout de 12s por feed: si cae (abort por red
+// lenta, HTTP transitorio) se pierde TODO el lote (caso real 2026-10-29: los 3
+// feeds de We Rave You abortaron en la misma corrida). Reintentamos una vez.
 async function fetchFeed(feed) {
-  const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), 12000)
-  try {
-    const res = await fetch(feed.url, {
-      signal: ctrl.signal,
-      headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml, text/xml, */*' },
-    })
-    if (!res.ok) throw new Error('HTTP ' + res.status)
-    const xml = await res.text()
-    return parseItemsRegex(xml, feed)
-  } catch (e) {
-    console.warn(`  [warn] ${feed.name}: ${e.message}`)
-    return []
-  } finally {
-    clearTimeout(t)
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const ctrl = new AbortController()
+    const t = setTimeout(() => ctrl.abort(), 12000)
+    try {
+      const res = await fetch(feed.url, {
+        signal: ctrl.signal,
+        headers: { 'User-Agent': UA, Accept: 'application/rss+xml, application/xml, text/xml, */*' },
+      })
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      const xml = await res.text()
+      return parseItemsRegex(xml, feed)
+    } catch (e) {
+      if (attempt < 2) {
+        console.warn(`  [warn] ${feed.name}: ${e.message} — reintento en 2s`)
+        await new Promise((r) => setTimeout(r, 2000))
+      } else {
+        console.warn(`  [warn] ${feed.name}: ${e.message}`)
+      }
+    } finally {
+      clearTimeout(t)
+    }
   }
+  return []
 }
 
 function el(parent, tag) { return parent?.getElementsByTagName(tag)[0] || null }
