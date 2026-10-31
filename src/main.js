@@ -144,6 +144,13 @@ function bindKeyboard() {
     // ventana confunde. Escape ya la cerró arriba.
     if (isOverlayOpen()) return
 
+    // Pane de noticias abierto: es un modal de lectura → no interceptar.
+    // Evita mutear/cambiar tema/estación "a ciegas" detrás del artículo, y
+    // deja que ↑/↓ scrolleen el contenido con teclado (caso contrario,
+    // el preventDefault del volumen se los roba).
+    const pane = document.getElementById('news-pane')
+    if (pane?.classList.contains('open')) return
+
     switch (key) {
       case '/':
         e.preventDefault()

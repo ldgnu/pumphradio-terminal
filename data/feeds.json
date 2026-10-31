@@ -109,6 +109,16 @@
       "_note": "mag under UK (techno/electronic/festivales). Verificado vivo 2026-10-29 (item mas nuevo 26/10)."
     },
     {
+      "name": "Hard Cultr",
+      "url": "https://www.hardcultr.com/feed",
+      "genres": ["hardstyle", "hardcore"],
+      "priority": 1,
+      "enabled": true,
+      "lang": "en",
+      "source": "HARD CULTR",
+      "_note": "portal under de hard dance (hardstyle/hardcore/uptempo/hard techno). El 28/10 no tenia RSS, hoy si — verificado vivo 2026-10-30 (items de ese dia: Defqon 2027, Decibel, MoH)."
+    },
+    {
       "name": "UK Jazz News",
       "url": "https://ukjazznews.com/feed/",
       "genres": ["nujazz"],
