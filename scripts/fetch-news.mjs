@@ -70,22 +70,144 @@ function parseItemsRegex(xml, feed) {
     const desc = pick(isAtom ? 'summary' : 'description')
     const dateRaw = pick(isAtom ? 'published' : 'pubDate') || pick('updated')
     if (!title) continue
-    items.push({
+    const item = {
       title,
       link: link.trim(),
       summary: desc.slice(0, 4000),
       date: normalizeDate(dateRaw),
       source: feed.name,
       lang: feed.lang || '',
-      genres: feed.genres,
-    })
+      genres: [], // se completa abajo con classifyItem
+    }
+    item.genres = classifyItem(item, feed)
+    items.push(item)
   }
   return items
+}
+
+// --- Clasificador de género por CONTENIDO -----------------------------------
+// Los feeds generalistas (DJ Mag, We Rave You) marcan todo como "hardstyle" y
+// "deep" a la vez → hardcore aparecía en nujazz. Acá cada noticia se clasifica
+// mirando su título + resumen, y si no hay señal clara NO se etiqueta (mejor
+// vacío que mal etiquetado). Los feeds de nicho conservan su etiqueta como
+// fallback cuando el texto no alcanza.
+const GENRE_KEYWORDS = {
+  hardcore: [
+    'hardcore', 'gabber', 'uptempo', 'frenchcore', 'terrorcore', 'speedcore',
+    'rawstyle', 'raw hardstyle', 'defqon', 'dominator', 'masters of hardcore',
+    'q-dance', 'qdance', 'thunderdome', 'angerfist',
+    'miss k8', 'peacock', 'scooter', 'hakkuh', 'hakken', 'harder styles',
+    'mad dog', 'dogfight', 'industrial hardcore', 'millennium hardcore',
+  ],
+  hardstyle: [
+    'hardstyle', 'euphoric', 'reverse bass', 'rawstyle', 'raw hardstyle',
+    'headhunterz', 'da tweekaz', 'showtek', 'hard dance',
+    'defqon', 'qlimax', 'q-dance', 'harder styles', 'd-block', 's-te-fan',
+    'coone', 'wildstylez', 'brennan heart', 'hardstyle mag',
+  ],
+  deep: [
+    'deep techno', 'hypnotic', 'dub techno', 'minimal techno', 'atmospheric',
+    'birmingham', 'detroit', 'berghain', 'tresor', 'ostgut',
+    'sven vath', 'richie hawtin', 'ben klock', 'marcel dettmann', 'dixon',
+    'innervisions', 'afterlife', 'ambient techno', 'techno', 'rave',
+  ],
+  nujazz: [
+    'nu jazz', 'nujazz', 'acid jazz', 'broken beat', 'future jazz', 'jazztronica',
+    'jazz', 'soul', 'funk', 'blue note', 'brainfeeder', 'flying lotus',
+    'robert glasper', 'kamasi', 'thundercat', 'kaytranada', 'badbadnotgood',
+    'shabaka', 'makaya', 'downtempo', 'neo soul', 'jazz cafe', 'jazzfest',
+  ],
+  // Bolsa común para medios generalistas: si no hay señal de nicho pero la nota
+  // es de escena electrónica, igual entra al pool general (chip "todos").
+  electronica: [
+    'electronic', 'electronica', 'edm', 'festival', 'dj', 'club', 'nightclub',
+    'line-up', 'lineup', 'set', 'track', 'single', 'album', 'ep ', 'release',
+    'label', 'remix', 'tour', 'arena', 'venue', 'boiler room', 'ibiza',
+    'tomorrowland', 'awakenings', 'ultra', 'edc', 'creamfields',
+  ],
+}
+
+// Peso: hardcore/hardstyle son más específicos que "techno" genérico, así que
+// ante empate gana el más específico (evita que "hardstyle" se coma la noticia).
+const GENRE_PRIORITY = ['hardcore', 'hardstyle', 'nujazz', 'deep']
+// "electronica" es la bolsa general: solo se usa si NINGÚN género de nicho matchea.
+const NICHE_GENRES = ['hardcore', 'hardstyle', 'nujazz', 'deep']
+
+function countHits(text, kw) {
+  // palabra/frase completa: evita que "hard" matchee "hardware"
+  const re = new RegExp('(^|[^a-z0-9])' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^a-z0-9]|$)', 'g')
+  const m = text.match(re)
+  return m ? m.length : 0
+}
+
+// Falsos positivos conocidos: "hardcore" y "techno" se usan coloquialmente
+// ("power of hardcore", "hardcore punk", "hardcore fans"). Si el texto tiene
+// señales fuertes de otro género, ese gana aunque el otro tenga 1 hit.
+const CONTEXT_OVERRIDES = [
+  {
+    // jazz experimental / improv / punk-jazz: Cafe Oto, CafeOTO, improv, trio...
+    when: /\b(jazz|improv|improvis|free jazz|quartet|trio|sextet|saxophone|sax|drums|double bass|bassist|guitarist|pianist|ensemble|bluenote|blue note|cafe oto|cafeoto|gig|concert hall|recital)\b/,
+    genre: 'nujazz',
+    // solo si el texto huele a jazz de verdad (2+ señales) y no es hard dance
+    requireAtLeast: 2,
+  },
+]
+
+function applyContextOverride(text, winner) {
+  const t = ' ' + String(text || '').toLowerCase() + ' '
+  // si ya ganó nujazz, no hay nada que corregir
+  if (winner === 'nujazz') return winner
+  let hits = 0
+  const m = t.match(CONTEXT_OVERRIDES[0].when)
+  if (m) hits = m.length
+  // hard dance real siempre gana: evita robar noticias de hardcore/hardstyle legítimas
+  const hardSignals = countHits(t, 'hardcore') + countHits(t, 'hardstyle') + countHits(t, 'hard dance') + countHits(t, 'harder styles') + countHits(t, 'gabber')
+  if (hits >= 2 && hardSignals <= 1) return 'nujazz'
+  return winner
+}
+
+function classifyByContent(text) {
+  const t = ' ' + String(text || '').toLowerCase() + ' '
+
+  // 1) géneros de nicho: el que más keywords pegue gana
+  const scores = {}
+  for (const genre of NICHE_GENRES) {
+    let hits = 0
+    for (const kw of GENRE_KEYWORDS[genre]) hits += countHits(t, kw)
+    if (hits) scores[genre] = hits
+  }
+  const found = Object.keys(scores)
+  if (found.length) {
+    const max = Math.max(...Object.values(scores))
+    const top = found.filter((g) => scores[g] === max)
+    // desempate: el más específico primero
+    top.sort((a, b) => GENRE_PRIORITY.indexOf(a) - GENRE_PRIORITY.indexOf(b))
+    return [applyContextOverride(t, top[0])]
+  }
+
+  // 2) sin nicho claro → bolsa general si es escena electrónica
+  let generalHits = 0
+  for (const kw of GENRE_KEYWORDS.electronica) generalHits += countHits(t, kw)
+  if (generalHits >= 2) return ['electronica']
+
+  // 3) nada → sin etiqueta (mejor vacío que mal etiquetado)
+  return []
+}
+
+function classifyItem(item, feed) {
+  const content = classifyByContent(`${item.title} ${item.summary}`)
+  if (content.length) return content
+  // Sin señal en el texto: solo confiar en el feed si es de nicho puro.
+  const niche = (feed.genres || []).filter((g) => NICHE_GENRES.includes(g))
+  if (niche.length === 1) return niche
+  // feed generalista sin señal → sin etiqueta (no inventar)
+  return []
 }
 
 function stripTags(s) {
   return s.replace(/<!\[CDATA\[|\]\]>/g, ' ').replace(/<[^>]*>/g, ' ')
 }
+
 
 // DJ Mag (y otros) escapan su propio HTML DENTRO del RSS: la description
 // llega como &lt;div class="..."&gt;&lt;p&gt;texto&lt;/p&gt;. Sin decodificar,
@@ -156,14 +278,23 @@ async function main() {
     if (manual.length) console.log(`  · ${manual.length} noticia(s) manual(es) incluida(s)`)
   } catch { /* sin manuales, OK */ }
 
-  // Filtro anti-noticias-viejas: fuera todo lo que tenga >14 días o fecha
-  // inválida/vacía (feeds muertos tipo wordpress abandonado ya no pudren el listado).
-  const MAX_AGE_MS = 14 * 24 * 3600 * 1000
+  // Ventana de frescura POR GÉNERO: los géneros de nicho publican poco
+  // (hardstyle/hardcore pueden pasar semanas sin notas). Una ventana única de
+  // 14 días vaciaba esos apartados. Los generalistas sí se filtran parejo.
+  const AGE_BY_GENRE = {
+    hardstyle: 60 * 24 * 3600 * 1000, // 60 días: publica a cuentagotas
+    hardcore: 45 * 24 * 3600 * 1000,
+    nujazz: 30 * 24 * 3600 * 1000,
+    deep: 30 * 24 * 3600 * 1000,
+    _default: 14 * 24 * 3600 * 1000, // generalistas: fresco o nada
+  }
   const now = Date.now()
   const fresh = (it) => {
     const ts = Date.parse(it.date)
     if (!it.date || Number.isNaN(ts)) return false
-    return now - ts <= MAX_AGE_MS
+    const g = (it.genres || [])[0]
+    const maxAge = AGE_BY_GENRE[g] ?? AGE_BY_GENRE._default
+    return now - ts <= maxAge
   }
 
   // Log por feed: cuántas traen y cuántas sobreviven al filtro (debug de feeds muertos).

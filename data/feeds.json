@@ -4,7 +4,9 @@
     {
       "name": "Hard News",
       "url": "https://hardnews.nl/feed/",
-      "genres": ["hardcore"],
+      "genres": [
+        "hardcore"
+      ],
       "priority": 3,
       "enabled": true,
       "lang": "nl",
@@ -13,7 +15,9 @@
     {
       "name": "Intents Festival",
       "url": "https://www.intentsfestival.nl/feed/",
-      "genres": ["hardcore"],
+      "genres": [
+        "hardcore"
+      ],
       "priority": 3,
       "enabled": false,
       "lang": "nl",
@@ -23,7 +27,9 @@
     {
       "name": "The Raw Style",
       "url": "https://therawstyle.wordpress.com/feed/",
-      "genres": ["hardcore"],
+      "genres": [
+        "hardcore"
+      ],
       "priority": 2,
       "enabled": false,
       "lang": "en",
@@ -33,7 +39,9 @@
     {
       "name": "Hardstyle Mag",
       "url": "https://hardstylemag.com/feed/",
-      "genres": ["hardstyle"],
+      "genres": [
+        "hardstyle"
+      ],
       "priority": 3,
       "enabled": false,
       "lang": "en",
@@ -43,7 +51,9 @@
     {
       "name": "Masters of Hardcore",
       "url": "https://www.mastersofhardcore.com/feed/",
-      "genres": ["hardcore"],
+      "genres": [
+        "hardcore"
+      ],
       "priority": 3,
       "enabled": false,
       "lang": "en",
@@ -53,7 +63,9 @@
     {
       "name": "We Rave You - Hardstyle",
       "url": "https://weraveyou.com/tag/hardstyle/feed/",
-      "genres": ["hardstyle"],
+      "genres": [
+        "hardstyle"
+      ],
       "priority": 2,
       "enabled": false,
       "lang": "en",
@@ -63,7 +75,10 @@
     {
       "name": "DJ Mag",
       "url": "https://djmag.com/rss.xml",
-      "genres": ["deep", "hardstyle"],
+      "genres": [
+        "deep",
+        "hardstyle"
+      ],
       "priority": 2,
       "enabled": true,
       "lang": "en",
@@ -72,7 +87,10 @@
     {
       "name": "We Rave You",
       "url": "https://weraveyou.com/feed/",
-      "genres": ["deep", "hardstyle"],
+      "genres": [
+        "deep",
+        "hardstyle"
+      ],
       "priority": 2,
       "enabled": true,
       "lang": "en",
@@ -81,7 +99,9 @@
     {
       "name": "We Rave You - Hard Techno",
       "url": "https://weraveyou.com/tag/hard-techno/feed/",
-      "genres": ["techno"],
+      "genres": [
+        "techno"
+      ],
       "priority": 2,
       "enabled": true,
       "lang": "en",
@@ -91,7 +111,10 @@
     {
       "name": "Festileaks",
       "url": "https://www.festileaks.com/feed/",
-      "genres": ["hardstyle", "hardcore"],
+      "genres": [
+        "hardstyle",
+        "hardcore"
+      ],
       "priority": 1,
       "enabled": true,
       "lang": "nl",
@@ -101,7 +124,10 @@
     {
       "name": "Crack Magazine",
       "url": "https://crackmagazine.net/feed/",
-      "genres": ["techno", "deep"],
+      "genres": [
+        "techno",
+        "deep"
+      ],
       "priority": 2,
       "enabled": true,
       "lang": "en",
@@ -111,7 +137,10 @@
     {
       "name": "Hard Cultr",
       "url": "https://www.hardcultr.com/feed",
-      "genres": ["hardstyle", "hardcore"],
+      "genres": [
+        "hardstyle",
+        "hardcore"
+      ],
       "priority": 1,
       "enabled": true,
       "lang": "en",
@@ -121,12 +150,36 @@
     {
       "name": "UK Jazz News",
       "url": "https://ukjazznews.com/feed/",
-      "genres": ["nujazz"],
+      "genres": [
+        "nujazz"
+      ],
       "priority": 3,
       "enabled": true,
       "lang": "en",
       "source": "UK Jazz News",
       "_note": "pool nujazz (ROSE ROUGE): antes 0 noticias — sin feed jazz. Verificado vivo 2026-10-01 (10/10 items <=2 dias)."
+    },
+    {
+      "name": "Attack Mag",
+      "url": "https://www.attackmagazine.com/feed/",
+      "genres": [
+        "deep"
+      ],
+      "priority": 3,
+      "enabled": true,
+      "lang": "en",
+      "source": "Attack Mag"
+    },
+    {
+      "name": "Techno Live Sets",
+      "url": "https://technolivesets.com/feed/",
+      "genres": [
+        "deep"
+      ],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "Techno Live Sets"
     }
   ]
 }

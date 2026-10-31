@@ -59,17 +59,18 @@ function itemsForStation(station) {
   // Filtro manual de género (chips): tiene prioridad sobre la estación activa.
   if (manualFilter && manualFilter !== 'auto') {
     if (manualFilter === 'all') return allItems
-    const matched = allItems.filter((it) => (it.genres || []).some((g) => g.includes(manualFilter) || manualFilter.includes(g)))
-    return matched.length ? matched : allItems
+    // Sin fallback: si el género no tiene noticias, el panel queda vacío.
+    // Mostrar "todas" mezclaba hardcore dentro de nujazz (bug reportado por Javi).
+    return allItems.filter((it) => (it.genres || []).includes(manualFilter))
   }
   if (!station || !allItems.length) return allItems
-  const genres = station.subgenres || station.genres || []
-  const key = genres.join('|')
-  // coincidencia: el item pertenece a al menos uno de los géneros/subgéneros de la estación
-  const matched = allItems.filter((it) =>
-    (it.genres || []).some((g) => key.includes(g) || station.id.includes(g))
+  // Match exacto contra los subgéneros de la estación: un item entra solo si
+  // comparte etiqueta con la estación. Nada de "si no hay, mostrá todo".
+  const keys = [...(station.subgenres || []), ...(station.genres || []), station.id]
+    .map((g) => String(g).toLowerCase())
+  return allItems.filter((it) =>
+    (it.genres || []).some((g) => keys.includes(String(g).toLowerCase()))
   )
-  return matched.length ? matched : allItems
 }
 
 function renderFilterChips() {
@@ -115,7 +116,11 @@ export function renderForStation(station) {
   }
   const items = itemsForStation(station).slice(0, 8)
   if (!items.length) {
-    wrap.innerHTML = '<div class="news-empty dim">— no signal —</div>'
+    // Panel honesto: decir que este género no tiene noticias, sin mezclar las de otros.
+    const label = manualFilter && manualFilter !== 'auto' && manualFilter !== 'all'
+      ? manualFilter
+      : (station?.subgenres?.[0] || station?.genres?.[0] || station?.id || 'esta frecuencia')
+    wrap.innerHTML = `<div class="news-empty dim">— sin noticias de ${escapeHtml(String(label))} —</div>`
     return
   }
   wrap.innerHTML = items.map((it, i) => `
