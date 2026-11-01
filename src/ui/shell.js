@@ -132,7 +132,8 @@ function renderStationList() {
   const cur = getState().station?.id
   wrap.innerHTML = STATIONS.map(s => `
     <div class="station-row ${s.enabled ? 'enabled' : 'disabled'} ${s.id === cur ? 'active' : ''}"
-         data-station="${s.id}">
+         data-station="${s.id}"
+         ${s.enabled ? 'role="button" tabindex="0"' : 'aria-disabled="true"'}>
       <span class="st-num">0${s.num}</span>
       <span class="st-name">${s.name}</span>
       <span class="st-tag">${s.enabled ? (s.nickname ? `${s.nickname} — ${s.tagline}` : s.tagline) : 'no signal'}</span>

@@ -124,6 +124,9 @@ function initFavButton() {
 
 function bindKeyboard() {
   document.addEventListener('keydown', (e) => {
+    // si otro handler ya procesó la tecla (ej. Enter/Space sobre una fila de
+    // estación enfocada), no re-interpretarla a ciegas con atajos globales
+    if (e.defaultPrevented) return
     // si el comando está abierto, no interceptar
     const cmdInput = document.getElementById('cmd-input')
     if (document.activeElement === cmdInput) return
@@ -223,6 +226,17 @@ function bindKeyboard() {
     if (!row || !row.classList.contains('enabled')) return
     const st = STATIONS.find(s => s.id === row.dataset.station)
     if (st) audio.prefetch(st)
+  })
+  // Las filas de estación son focuseables (role=button, tabindex=0): activarlas
+  // con Enter o Space. Enter/Space marcan e.defaultPrevented… evitando que el
+  // atajo global Space (play/pausa) dispare encima de la selección.
+  document.getElementById('stations-list').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return
+    const row = e.target.closest('.station-row')
+    if (!row || !row.classList.contains('enabled')) return
+    e.preventDefault()
+    const st = STATIONS.find(s => s.id === row.dataset.station)
+    if (st) { setStation(st); audio.loadStation(st) }
   })
 }
 
