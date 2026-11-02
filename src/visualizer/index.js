@@ -150,6 +150,17 @@ export class Visualizer {
         : ' · SIN SEÑAL'
       this.labelEl.textContent = this.mode.toUpperCase() + suffix
     }
+    // Accesibilidad: el canvas es invisible para lectores de pantalla. Se
+    // describe con aria-label (role="img" en index.html) y se actualiza SOLO
+    // cuando cambia el estado, no cada frame.
+    if (this.canvas && changed) {
+      const desc =
+        state === 'live' ? 'Visualizador activo, siguiendo la música'
+        : state === 'muted' ? 'Radio en silencio, visualizador esperando'
+        : state === 'off' ? 'Visualizador apagado'
+        : 'Visualizador sin señal de audio'
+      this.canvas.setAttribute('aria-label', desc)
+    }
     window.__vizState = {
       mode: this.mode,
       state,
@@ -257,7 +268,6 @@ export class Visualizer {
       const v = (freq[idx] || 0) / 255
       this.smooth[i] += (v - this.smooth[i]) * 0.45
       const h = Math.max(1, this.smooth[i] * this.h)
-      ctx.fillStyle = accent
       ctx.globalAlpha = 0.4 + this.smooth[i] * 0.6
       ctx.fillRect(i * barW + 1, this.h - h, barW - 2, h)
     }
