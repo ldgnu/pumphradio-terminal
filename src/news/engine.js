@@ -83,8 +83,10 @@ function renderFilterChips() {
   }
   bar.innerHTML = NEWS_FILTERS.map((f) => {
     const active = manualFilter === f.id
-    return `<button class="news-chip ${active ? 'active' : ''}" role="tab" aria-selected="${active}" data-filter="${f.id}" title="${f.label} (${counts[f.id] ?? 0})">${escapeHtml(f.label)}${counts[f.id] ? ` <span class="nf-count">${counts[f.id]}</span>` : ''}</button>`
-  }).join('') + '<button class="news-chip nf-auto ' + (manualFilter === 'auto' ? 'active' : '') + '" role="tab" aria-selected="' + (manualFilter === 'auto') + '" data-filter="auto" title="Seguir la estación activa">auto</button>'
+    // botones toggle (aria-pressed): no hay tabpanel ni pestañas reales acá,
+    // role=tab sin role=tabpanel era semántica ARIA suelta.
+    return `<button class="news-chip ${active ? 'active' : ''}" aria-pressed="${active}" data-filter="${f.id}" title="${f.label} (${counts[f.id] ?? 0})">${escapeHtml(f.label)}${counts[f.id] ? ` <span class="nf-count">${counts[f.id]}</span>` : ''}</button>`
+  }).join('') + '<button class="news-chip nf-auto ' + (manualFilter === 'auto' ? 'active' : '') + '" aria-pressed="' + (manualFilter === 'auto') + '" data-filter="auto" title="Seguir la estación activa">auto</button>'
   bar.querySelectorAll('.news-chip').forEach((el) => {
     el.addEventListener('click', () => setFilter(el.dataset.filter))
   })
