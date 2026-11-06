@@ -171,6 +171,19 @@
       "source": "Attack Mag"
     },
     {
+      "name": "EDM Tunes",
+      "url": "https://www.edmtunes.com/feed/",
+      "genres": [
+        "techno",
+        "hardstyle"
+      ],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "EDMTunes",
+      "_note": "portal EDM/hard dance (noticias, releases, festivales). Verificado vivo 2026-11-05 (items de ese dia). Fue agregado cuando Crack Magazine dio HTTP 500."
+    },
+    {
       "name": "Techno Live Sets",
       "url": "https://technolivesets.com/feed/",
       "genres": [
