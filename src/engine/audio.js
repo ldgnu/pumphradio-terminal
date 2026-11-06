@@ -468,12 +468,18 @@ class AudioEngine {
     try { if (this.bridge?.ctx && this.bridge.ctx.state !== 'closed') this.bridge.ctx.close() } catch { /* ignore */ }
     const wasPlaying = !this.audio.paused
     this.audio.pause()
+    // NO tocar audio.volume: cuando hay grafo, el volumen vive SOLO en el
+    // GainNode (ver applyVolume: audio.volume nativo + gain = doble
+    // atenuación; en iOS el nativo se ignora y el gain gana de todos modos).
     this.audio = this._createAudio(true)
-    this.audio.volume = getState().volume / 100
     this.audio.src = src
     this.bindEvents()
     this.bridge = new AnalyserBridge(this.audio)
     this._rebuilds++
+    // El bridge nuevo nace con gain 0.8 hardcodeado (AnalyserBridge.build):
+    // aplicar el volumen real del store o el usuario escucha al 80% y VOL %
+    // miente justo después de un rebuild.
+    this.applyVolume(getState().volume)
     if (wasPlaying || this.station) {
       this.audio.load()
       // el rebuild lo dispara el visualizer (rAF) tras un gesto previo del
