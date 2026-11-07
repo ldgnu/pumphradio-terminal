@@ -117,8 +117,13 @@ export class Visualizer {
       return null
     }
     const f = an.readFrequency()
-    const w = an.readWaveform()
-    if (!f || !w) return null
+    // La forma de onda (1024 bytes por frame) solo la pintan oscilloscope y
+    // waveform. En spectrum/ascii/bars pedirla es una copia al vacío cada
+    // frame: se lee solo si el modo la usa.
+    if (!f) return null
+    const needWave = this.mode === 'oscilloscope' || this.mode === 'waveform'
+    const w = needWave ? an.readWaveform() : null
+    if (needWave && !w) return null
     if (energy(f) > 4) {
       this._deadFrames = 0
       this._realLast = true
