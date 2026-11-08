@@ -157,8 +157,12 @@ export function syncActiveStationIntoView() {
   const active = wrap.querySelector('.station-row.active')
   if (!active) return
   // requestAnimationFrame: espera al layout real antes de medir.
+  // Con prefers-reduced-motion el scroll va instantáneo (WCAG 2.3.3): la app
+  // entera respeta esa preferencia en CSS, el smooth acá era el único
+  // movimiento animado que la ignoraba.
+  const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
   requestAnimationFrame(() => {
-    active.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    active.scrollIntoView({ block: 'nearest', behavior })
   })
 }
 
