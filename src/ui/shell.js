@@ -223,6 +223,11 @@ export function fmtElapsed(sec) {
 function startClock() {
   const clock = $('#clock')
   if (!clock) return
+  // Idempotente: initShell() lo llama al boot y la subscripción a 'booted'
+  // lo vuelve a llamar cuando termina el overlay. Sin guard quedaban DOS
+  // setInterval (uno por llamada) corriendo para siempre.
+  if (clock.dataset.ticking) return
+  clock.dataset.ticking = '1'
   const tick = () => {
     const d = new Date()
     clock.textContent = d.toISOString().slice(11, 19) + ' UTC'
