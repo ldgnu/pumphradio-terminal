@@ -4,6 +4,7 @@
  * Lo usan: help, history, favorites, ambient, news.
  */
 let open = false
+let lastFocus = null
 
 function $(id) { return document.getElementById(id) }
 
@@ -21,9 +22,12 @@ export function openOverlay(title) {
   const ov = $('overlay')
   if (!ov) return
   if (title) setOverlayTitle(title)
+  // a11y: guardar el foco actual, mandarlo al overlay y devolverlo al cerrar
+  if (!open) lastFocus = document.activeElement
   ov.classList.add('open')
   ov.setAttribute('aria-hidden', 'false')
   open = true
+  $('ov-close')?.focus({ preventScroll: true })
   document.getElementById('cmd-line')?.classList.add('dimmed')
 }
 
@@ -34,6 +38,10 @@ export function closeOverlay() {
     ov.setAttribute('aria-hidden', 'true')
   }
   open = false
+  if (lastFocus && document.contains(lastFocus)) {
+    lastFocus.focus({ preventScroll: true })
+  }
+  lastFocus = null
   document.getElementById('cmd-line')?.classList.remove('dimmed')
 }
 
