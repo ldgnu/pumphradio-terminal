@@ -46,7 +46,15 @@ export class AnalyserBridge {
     // iOS: el contexto puede estar 'suspended' (autoplay policy) o
     // 'interrupted' (llamada, screen lock, Siri). Ambos necesitan resume().
     if (this.ctx && (this.ctx.state === 'suspended' || this.ctx.state === 'interrupted')) {
-      this.ctx.resume().catch(() => {})
+      // El render loop llama data() a ~60 fps: sin debounce esto dispara
+      // ctx.resume() (promesa + churn) en CADA frame mientras el contexto
+      // queda suspendido. Reintentar cada 500ms alcanza y deja de quemar CPU.
+      if (this._resuming) return
+      const now = Date.now()
+      if (this._lastResume && now - this._lastResume < 500) return
+      this._lastResume = now
+      this._resuming = true
+      this.ctx.resume().catch(() => {}).finally(() => { this._resuming = false })
     }
   }
 

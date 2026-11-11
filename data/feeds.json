@@ -193,6 +193,18 @@
       "enabled": true,
       "lang": "en",
       "source": "Techno Live Sets"
+    },
+    {
+      "name": "EDM Identity",
+      "url": "https://edmidentity.com/feed/",
+      "genres": [
+        "electronica"
+      ],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "EDM Identity",
+      "_note": "portal EDM generalista con cobertura real de hard dance (JACKPOT Vault hard techno, EDC, festivales). Verificado vivo 2026-11-10 (items de ese dia). Genres no-niche: clasifica por contenido."
     }
   ]
 }
