@@ -108,7 +108,9 @@ export async function enrich(artist, track) {
       const mbid = mbArtist.id
       
       // 3b) Obtener detalles completos con relaciones y géneros
-      const mbDetails = await mbFetch(`/${mbid}?inc=url-rels+genres+tags&fmt=json`)
+      // (antes: /${mbid} sin tipo de entidad → MusicBrainz respondía 404
+      //  siempre y la bio nunca cargaba)
+      const mbDetails = await mbFetch(`/artist/${mbid}?inc=url-rels+genres+tags&fmt=json`)
       
       if (mbDetails) {
         // Datos factuales estructurados
