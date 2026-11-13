@@ -70,9 +70,18 @@ export function initSession() {
     }
   })
 
-  // uptime: cuenta solo mientras suena
+  // uptime: cuenta solo mientras suena. Si 'playing' llega de nuevo en true
+  // (resume tras buffering o cambio de estacion), guardar el delta pendiente
+  // antes de resetear startedAt — antes se perdian esos segundos del acumulado.
   on('playing', (playing) => {
-    if (playing) { startedAt = Date.now(); return }
+    if (playing) {
+      if (startedAt) {
+        const delta = Math.floor((Date.now() - startedAt) / 1000)
+        if (delta > 0) { totalSeconds += delta; sessionSeconds += delta }
+      }
+      startedAt = Date.now()
+      return
+    }
     if (startedAt) { totalSeconds += Math.floor((Date.now() - startedAt) / 1000); startedAt = null }
   })
   // cada 30s suma el delta de la sesion activa y persiste (antes: cada 5s
