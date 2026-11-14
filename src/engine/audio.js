@@ -290,17 +290,45 @@ class AudioEngine {
 
   connectMetadata(station) {
     if (station.metaType === 'zeno-sse' && station.metadataUrl) {
-      try {
-        this.eventSource = new EventSource(station.metadataUrl)
-        this.eventSource.onmessage = (e) => {
-          try {
-            const data = JSON.parse(e.data)
-            if (data.streamTitle) this.handleTitle(data.streamTitle)
-          } catch { /* ignore */ }
-        }
-      } catch { /* ignore */ }
+      this._metadataRetries = 0
+      this._openMetadata(station)
     } else if (station.metaType === 'none') {
       setNow({ artist: station.name, track: '', streamTitle: '', source: 'none' })
+    }
+  }
+
+  // Abre el SSE de metadata de Zeno. Un error puntual de red lo maneja el
+  // propio EventSource (reconecta solo), pero si la conexión muere de forma
+  // definitiva (endpoint caído, HTTP != 200, CORS) readyState queda CLOSED y
+  // NADIE lo reabre: "now playing" se congelaba con el último título para
+  // siempre. Acá se reabre con backoff (15s → 30s → ... techo 5 intentos) y
+  // solo si la estación sigue siendo la misma (cortes limpios al cambiar).
+  _openMetadata(station) {
+    let es
+    try {
+      es = new EventSource(station.metadataUrl)
+    } catch { /* ignore */ return }
+    this.eventSource = es
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data)
+        if (data.streamTitle) this.handleTitle(data.streamTitle)
+      } catch { /* ignore */ }
+    }
+    es.onerror = () => {
+      if (es.readyState !== EventSource.CLOSED) return // reconexión propia: no tocar
+      es.close()
+      if (this.eventSource === es) this.eventSource = null
+      if (this.station?.id !== station.id) return
+      if ((this._metadataRetries || 0) >= 5) return
+      this._metadataRetries = (this._metadataRetries || 0) + 1
+      const delay = 15000 * this._metadataRetries
+      console.warn(`[audio] metadata SSE muerta, reintento en ${delay / 1000}s`)
+      setTimeout(() => {
+        if (this.station?.id === station.id && !this.eventSource) {
+          this._openMetadata(station)
+        }
+      }, delay)
     }
   }
 
