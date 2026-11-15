@@ -1,10 +1,14 @@
 // PumphRadio Service Worker
 // Estrategia: network-first para el shell (HTML/navegación) → nunca más ves una
 // versión vieja del sitio; cache-first solo para assets con hash (inmutables).
-// NUNCA cachea streams de audio ni news.json.
+// NUNCA cachea streams de audio. news.json va network-first con copia offline
+// (caché NEWS_CACHE): fresco con red, legible sin conexión.
 // IMPORTANTE: subir SW_VERSION en cada release que cambie assets sin hash.
-const SW_VERSION = 'v9';
+const SW_VERSION = 'v10';
 const CACHE_NAME = 'pumphradio-shell-' + SW_VERSION;
+// Caché dedicada para news.json (fallback offline). NO se limpia en activate:
+// si muere la red, la última lista de noticias conocida sigue legible.
+const NEWS_CACHE = 'pumphradio-news-v1';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -18,7 +22,6 @@ const STATIC_ASSETS = [
 
 // Patterns to NEVER cache
 const NO_CACHE_PATTERNS = [
-  /news\.json/,
   /\.(mp3|ogg|opus|aac|m3u8|pls|flac|wav)(\?|$)/i,
   /\/stream\//,
   /\/api\//,
@@ -68,10 +71,32 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// news.json: NETWORK-FIRST con fallback a la última copia cacheada (offline).
+// Antes era network-only: sin conexión la lista de noticias quedaba vacía.
+// Siempre fresco con red; en offline sirve la copia anterior en vez de romper.
+function isNewsJson(url) {
+  try { return new URL(url).pathname.endsWith('/news.json') } catch { return false }
+}
+
 self.addEventListener('fetch', (event) => {
   const request = event.request;
+  if (request.method === 'GET' && isNewsJson(request.url)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(NEWS_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   if (!shouldCache(request)) {
-    // Network-only for streams/news
+    // Network-only for streams
     return;
   }
 
