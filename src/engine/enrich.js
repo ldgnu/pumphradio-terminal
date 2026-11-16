@@ -13,6 +13,9 @@
  */
 
 const TTL = 7 * 24 * 3600 * 1000
+// Los resultados vacíos (lookup que no encontró nada o falló la red) NO viven 7 días:
+// se reintentan a los 10 minutos, si no una caída pasaba a un track en blanco toda la semana.
+const MISS_TTL = 10 * 60 * 1000
 const MB_BASE = 'https://musicbrainz.org/ws/2'
 const CAA_BASE = 'https://coverartarchive.org'
 const UA = 'PumphRadio/0.1 (https://pumphradio.com.ar)'
@@ -43,10 +46,14 @@ function cacheKey(artist, track) { return `${artist}|${track}`.toLowerCase() }
 function fromCache(key) {
   const e = memCache.get(key)
   if (!e) return null
-  if (Date.now() - e.ts > TTL) { memCache.delete(key); return null }
+  if (Date.now() - e.ts > (e.miss ? MISS_TTL : TTL)) { memCache.delete(key); return null }
   return e.data
 }
-function toCache(key, data) { memCache.set(key, { ts: Date.now(), data }) }
+function toCache(key, data) {
+  // miss = lookup sin datos (red falló o no hubo match): TTL corto, se reintenta
+  const miss = !data || Object.keys(data).length === 0
+  memCache.set(key, { ts: Date.now(), data, miss })
+}
 
 function escLucene(s) { return s.replace(/["\\]/g, c => `\\${c}`) }
 
