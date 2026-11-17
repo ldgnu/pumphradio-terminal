@@ -21,11 +21,12 @@ const MAX_ITEMS = 25
 
 // Un solo intento depende de un timeout de 12s por feed: si cae (abort por red
 // lenta, HTTP transitorio) se pierde TODO el lote (caso real 2026-10-29: los 3
-// feeds de We Rave You abortaron en la misma corrida). Reintentamos una vez.
+// feeds de We Rave You abortaron en la misma corrida). 3 intentos con backoff
+// escalonado: 2s → 4s (caso real 2026-11-16: We Rave You abortó 2/2 intentos).
 async function fetchFeed(feed) {
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
     const ctrl = new AbortController()
-    const t = setTimeout(() => ctrl.abort(), 12000)
+    const t = setTimeout(() => ctrl.abort(), 15000)
     try {
       const res = await fetch(feed.url, {
         signal: ctrl.signal,
@@ -35,9 +36,9 @@ async function fetchFeed(feed) {
       const xml = await res.text()
       return parseItemsRegex(xml, feed)
     } catch (e) {
-      if (attempt < 2) {
-        console.warn(`  [warn] ${feed.name}: ${e.message} — reintento en 2s`)
-        await new Promise((r) => setTimeout(r, 2000))
+      if (attempt < 3) {
+        console.warn(`  [warn] ${feed.name}: ${e.message} — reintento en ${attempt * 2}s`)
+        await new Promise((r) => setTimeout(r, attempt * 2000))
       } else {
         console.warn(`  [warn] ${feed.name}: ${e.message}`)
       }
