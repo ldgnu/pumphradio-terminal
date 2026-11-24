@@ -124,6 +124,12 @@ class AudioEngine {
     this.audio.onwaiting = () => setLoading(true)
     this.audio.onplaying = () => {
       setLoading(false)
+      // Reconexión lograda: resetear el contador de reintentos. Sin esto,
+      // micro-cortes acumulados a lo largo de una sesión larga agotaban el
+      // techo de scheduleReconnect() y la radio quedaba sin recuperación
+      // para siempre aunque el stream estuviera sano.
+      this.reconnectAttempts = 0
+      if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null }
       this.logTimeToAudio()
     }
     this.audio.onerror = () => {
@@ -175,7 +181,16 @@ class AudioEngine {
     this.audio.onplay = () => setPlaying(true)
     this.audio.onpause = () => setPlaying(false)
     this.audio.onwaiting = () => setLoading(true)
-    this.audio.onplaying = () => setLoading(false)
+    this.audio.onplaying = () => {
+      setLoading(false)
+      // igual que en bindEvents: reconexión lograda → resetear reintentos
+      this.reconnectAttempts = 0
+      if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null }
+    }
+    // rebinding manual acá: mantener el BUFFER de la status bar vivo también
+    // en fallback (sin estos listeners quedaba congelado en el último valor).
+    this.audio.addEventListener('progress', () => this.syncBuffered())
+    this.audio.addEventListener('timeupdate', () => this.syncBuffered())
     // Sin reconexión el stream queda muerto para siempre en este modo.
     this.audio.onerror = () => {
       setLoading(false)

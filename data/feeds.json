@@ -241,6 +241,18 @@
       "enabled": true,
       "lang": "en",
       "source": "Rave Jungle"
+    },
+    {
+      "name": "Only Techno",
+      "url": "https://onlytechno.net/feed/",
+      "genres": [
+        "techno"
+      ],
+      "priority": 2,
+      "enabled": true,
+      "lang": "en",
+      "source": "Only Techno",
+      "_note": "noticias y releases de techno/underground. Verificado vivo 2026-11-19 (items de hoy). Genres no-niche: clasifica por contenido."
     }
   ]
 }

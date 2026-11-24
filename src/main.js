@@ -164,6 +164,9 @@ function bindKeyboard() {
         openHelp()
         break
       case ' ':
+        // A11y: si el foco está en un botón, Space debe activarlo nativamente.
+        // El preventDefault global se lo robaba y encima toggleaba la radio.
+        if (document.activeElement instanceof HTMLButtonElement) break
         e.preventDefault()
         audio.toggle()
         break
