@@ -30,6 +30,7 @@ function init() {
   initNews()
   initPaneControls()
   initPlayerBar()
+  initStreamState()
   initThemeSwitcher()
   initVisualizer()
   initIosUnlock()
@@ -58,6 +59,25 @@ function init() {
   }
 
   bindKeyboard()
+
+  // PRECARGA EN EL BOOT: calentar los streams mientras el usuario todavía no
+  // tocó play. Al arrancar la app no hay ninguna conexión a Zeno, así que el
+  // primer play tardaba 3-6s en sonar. Con los preloaders listos (elementos
+  // descartables, nunca el activo) el buffer ya está armado.
+  // Prioridad: la estación guardada primero; las otras después y sin apuro.
+  // En conexiones con ahorro de datos precargamos SOLO la activa.
+  const saveData = (() => {
+    try { return !!(navigator.connection && (navigator.connection.saveData ||
+      /^(slow-2g|2g|3g)$/.test(navigator.connection.effectiveType || ''))) } catch { return false }
+  })()
+
+  const warmOthers = () => {
+    if (saveData) return
+    STATIONS.filter(s => s.enabled && s.id !== first?.id)
+      .forEach((s, i) => setTimeout(() => audio.prefetch(s), 800 + i * 700))
+  }
+  if ('requestIdleCallback' in window) requestIdleCallback(warmOthers, { timeout: 2500 })
+  else setTimeout(warmOthers, 1200)
 
   document.getElementById('app').classList.add('visible')
   // la app pasa de display:none a flex → re-dimensionar el canvas del visualizador
@@ -120,6 +140,51 @@ function initFavButton() {
   // actualizar estado del botón cuando cambia el track
   on('now', update)
   on('playing', update)
+}
+
+// Indicador visible del estado del stream: CONECTANDO → BUFFERING → EN VIVO.
+// El objetivo es que nadie se quede esperando una radio muda sin saber si está
+// cargando o está rota. Si tras 12s no hay audio, pasa a "SIN SEÑAL" en vez de
+// quedarse en "cargando" para siempre.
+function initStreamState() {
+  const el = document.getElementById('pb-stream-state')
+  if (!el) return
+  const text = el.querySelector('.pb-ss-text')
+  let slowTimer = null
+
+  const paint = (state, label) => {
+    el.hidden = state === 'idle'
+    el.classList.remove('is-connecting', 'is-buffering', 'is-live', 'is-error')
+    if (state !== 'idle') el.classList.add('is-' + state)
+    if (text) text.textContent = label
+  }
+
+  const update = () => {
+    const st = getState()
+    if (st.loading) {
+      // Ya sonó alguna vez esta sesión y ahora bufferea → está reconectando.
+      paint('buffering', audio.audio && audio.audio.currentTime > 0 ? 'BUFFERING' : 'CONECTANDO')
+    } else if (st.playing) {
+      paint('live', 'EN VIVO')
+    } else {
+      paint('idle')
+    }
+  }
+
+  on('loading', () => { update(); armSlowWatchdog() })
+  on('playing', update)
+  on('station', () => { paint('connecting', 'CONECTANDO'); armSlowWatchdog() })
+
+  // Watchdog: si quedó "cargando" demasiado, avisar en vez de mentir.
+  function armSlowWatchdog() {
+    if (slowTimer) clearTimeout(slowTimer)
+    slowTimer = setTimeout(() => {
+      const st = getState()
+      if (st.loading && !st.playing) paint('error', 'SIN SEÑAL · reintentando')
+    }, 12000)
+  }
+
+  update()
 }
 
 function bindKeyboard() {

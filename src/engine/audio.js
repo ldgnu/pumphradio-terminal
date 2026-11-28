@@ -265,42 +265,112 @@ class AudioEngine {
       return
     }
 
+    // Cambio de estación: cortar en seco el stream anterior ANTES de asignar
+    // el nuevo. Sin esto, el buffer del viejo seguía vivo y al hacer play() del
+    // nuevo quedaban las DOS radios sonando a la vez (reportado por Javi).
+    // pause() + removeAttribute('src') + load() es la secuencia que realmente
+    // descarta el buffer; solo cambiar src no lo garantiza.
+    const prev = this.audio.src
+    if (prev && prev !== station.streamUrl) {
+      try {
+        this.audio.pause()
+        this.audio.removeAttribute('src')
+        this.audio.load()
+      } catch { /* ignore */ }
+    }
+
     this.audio.src = station.streamUrl
     this.applyVolume(getState().volume)
     setLoading(true)
     this.audio.load()
+    // Al cambiar de estación soltamos los preloaders sobrantes: si no, quedan
+    // hasta 4 conexiones abiertas a Zeno consumiendo datos de más.
+    this._releasePreloadersExcept(station.id)
     // OJO: sin ensureBridge() acá — loadStation() también corre sin gesto
     // (tryAutostart al boot). El grafo lo arman play()/unmuteAutostart,
     // que siempre son gesto.
     this.audio.play().catch(() => setLoading(false))
+    // La estación ya quedó cargada en el elemento principal: su preloader
+    // (creado por prefetch/warm) queda duplicando la conexión a Zeno mientras
+    // se escucha. Se libera al primer 'playing' real (y por techo de tiempo
+    // si el evento nunca llega) para no dejar 2 conexiones vivas al mount.
+    this._releasePreloaderWhenLive(station.id)
 
     this.connectMetadata(station)
   }
 
   // Precarga temprana: se llama en pointerdown del selector de estación
-  // (~100-300ms antes del click). load() bufferiza sin reproducir; cuando el
-  // click llega y llama a loadStation(), el stream ya está cargando → play seco.
+  // (~100-300ms antes del click). Usa un elemento DESCARTABLE, nunca el que
+  // está reproduciendo: pisar audio.src del elemento activo dejaba el stream
+  // anterior con buffer vivo y sonaban las dos radios a la vez.
   prefetch(station) {
     if (!station?.streamUrl) return
-    if (this.station?.id === station.id && this.audio.src) return
-    if (this._prefetchId === station.id && this.audio.src) return
-    this._prefetchId = station.id
-    this.audio.src = station.streamUrl
-    this.audio.load()
+    if (this.station?.id === station.id) return
+    const pre = this._getPreloader(station.id)
+    if (!pre) return
+    if (pre.dataset.url === station.streamUrl) return // ya está precargado
+    pre.dataset.url = station.streamUrl
+    pre.src = station.streamUrl
+    try { pre.load() } catch { /* ignore */ }
   }
 
-  // Warm-up al abrir la página: bufferiza el stream de la estación
-  // seleccionada SIN play() (autoplay está bloqueado sin gesto de todos
-  // modos). Conecta metadata para que "now playing" ya esté al tocar play.
-  // Con audio.src ya puesto, loadStation() cae en el fast path → play seco.
+  // Warm-up al abrir la página: bufferiza la estación elegida SIN reproducir.
+  // Igual que prefetch(): elemento aparte, jamás el activo.
   warm(station) {
     if (!station?.streamUrl) return
-    if (this.station?.id === station.id && this.audio.src) return
+    if (this.station?.id === station.id) return
     this.station = station
-    this._prefetchId = station.id
-    this.audio.src = station.streamUrl
-    this.audio.load()
+    this.prefetch(station)
     this.connectMetadata(station)
+  }
+
+  // Elemento de precarga por estación (reusa uno existente). Vive fuera del
+  // grafo Web Audio y nunca se reproduce: solo llena buffer del stream.
+  _getPreloader(stationId) {
+    if (!this._preloaders) this._preloaders = new Map()
+    if (this._preloaders.has(stationId)) return this._preloaders.get(stationId)
+    const a = document.createElement('audio')
+    a.preload = 'auto'
+    a.muted = true
+    a.crossOrigin = 'anonymous'
+    a.dataset.preloadFor = stationId
+    a.style.display = 'none'
+    try { document.body.appendChild(a) } catch { return null }
+    this._preloaders.set(stationId, a)
+    return a
+  }
+
+  // Suelta un preloader (al cambiar de estación o cerrar): cortar src + load()
+  // libera la conexión al stream en vez de dejarla colgada consumiendo datos.
+  _releasePreloader(stationId) {
+    const a = this._preloaders?.get(stationId)
+    if (!a) return
+    try { a.pause(); a.removeAttribute('src'); a.load() } catch { /* ignore */ }
+    try { a.remove() } catch { /* ignore */ }
+    this._preloaders.delete(stationId)
+  }
+
+  // Libera TODOS los preloaders menos el indicado (evita 4 conexiones vivas).
+  _releasePreloadersExcept(stationId) {
+    for (const id of [...(this._preloaders?.keys() || [])]) {
+      if (id !== stationId) this._releasePreloader(id)
+    }
+  }
+
+  // Suelta el preloader de la estación que acaba de arrancar en el elemento
+  // principal: mientras se escucha, ese preloader mantiene una SEGUNDA
+  // conexión viva al mismo mount de Zeno (consumo de datos duplicado) hasta
+  // que el usuario cambie de estación. Se libera al primer 'playing' y, si
+  // el evento no llega, por techo de tiempo de todos modos. Liberar dos
+  // veces es inofensivo (_releasePreloader chequea que exista).
+  _releasePreloaderWhenLive(stationId) {
+    if (!this._preloaders?.has(stationId)) return
+    const release = () => this._releasePreloader(stationId)
+    this.audio.addEventListener('playing', release, { once: true })
+    setTimeout(() => {
+      try { this.audio.removeEventListener('playing', release) } catch { /* ignore */ }
+      release()
+    }, 12000)
   }
 
   connectMetadata(station) {

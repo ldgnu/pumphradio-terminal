@@ -141,6 +141,12 @@
 
         <span id="pb-track" class="pb-track dim">—</span>
         <span id="pb-station" class="pb-station dim">—</span>
+        <!-- Estado del stream bien visible: CONECTANDO → BUFFERING → EN VIVO.
+             Evita que alguien se quede esperando una radio muda sin saber
+             si está cargando o está rota. -->
+        <span id="pb-stream-state" class="pb-stream-state" role="status" aria-live="polite" hidden>
+          <span class="pb-ss-dot" aria-hidden="true"></span><span class="pb-ss-text">CONECTANDO</span>
+        </span>
       </section>
 
       <!-- Visualizer (PHASE 4) -->

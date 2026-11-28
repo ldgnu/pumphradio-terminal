@@ -211,6 +211,54 @@ html, body {
 .pb-track { font-size: 12px; flex: 1; min-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pb-station { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }
 
+/* --- Estado del stream (CONECTANDO → BUFFERING → EN VIVO) --- */
+.pb-stream-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  color: var(--dim);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.pb-stream-state[hidden] { display: none; }
+.pb-ss-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+/* Cargando: pulso suave. En vivo: fijo y en color de acento. */
+.pb-stream-state.is-connecting,
+.pb-stream-state.is-buffering {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.pb-stream-state.is-connecting .pb-ss-dot,
+.pb-stream-state.is-buffering .pb-ss-dot {
+  animation: pbSsPulse 1s ease-in-out infinite;
+}
+.pb-stream-state.is-live { color: var(--accent); border-color: var(--accent); }
+.pb-stream-state.is-live .pb-ss-dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 75%, transparent);
+}
+.pb-stream-state.is-error {
+  color: #ff5f56;
+  border-color: #ff5f56;
+}
+@keyframes pbSsPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+/* WCAG 2.3.3: sin pulso si el usuario pidió menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  .pb-stream-state .pb-ss-dot { animation: none !important; }
+}
+
 /* --- Visualizer --- */
 .viz {
   position: relative;
